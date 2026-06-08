@@ -1,0 +1,37 @@
+# === Build ===
+target/
+*.class
+*.jar
+*.war
+*.zip
+*.tar.gz
+.flattened-pom.xml
+dependency-reduced-pom.xml
+
+# === IDE - 个人配置不进版本库 ===
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.swp
+*.swo
+*~
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === Spark ===
+*._SUCCESS.crc
+spark-warehouse/
+derby.log
+metastore_db/
+*.parquet.crc
+*.orc.crc
+
+# === Test ===
+test-output/
+surefire-reports/
+jacoco*.exec
+data/output/
