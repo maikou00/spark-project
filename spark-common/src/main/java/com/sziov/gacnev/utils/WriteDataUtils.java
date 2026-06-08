@@ -63,7 +63,7 @@ public final class WriteDataUtils {
      * 私有构造方法，防止实例化
      */
     private WriteDataUtils() {
-        throw new AssertionError("工具类禁止实例化");
+        throw new UnsupportedOperationException("工具类不允许实例化");
     }
 
 

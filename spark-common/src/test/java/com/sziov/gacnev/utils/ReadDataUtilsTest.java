@@ -12,6 +12,8 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.junit.jupiter.api.*;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -187,9 +189,8 @@ public class ReadDataUtilsTest {
         log.info("数据内容:");
         df.show();
         
-        assert df.count() == 3;
-        assert df.schema().fields().length == 4;
-        
+        assertThat(df.count() == 3).isTrue();
+        assertThat(df.schema().fields().length == 4).isTrue();
         log.info("测试读取JSON文件完成");
     }
 
@@ -214,9 +215,8 @@ public class ReadDataUtilsTest {
         log.info("数据内容:");
         df.show();
         
-        assert df.count() == 3;
-        assert df.schema().fields().length == 4;
-        
+        assertThat(df.count() == 3).isTrue();
+        assertThat(df.schema().fields().length == 4).isTrue();
         log.info("测试读取CSV文件完成");
     }
 
@@ -239,8 +239,7 @@ public class ReadDataUtilsTest {
         log.info("数据行数: {}", df.count());
         df.show();
         
-        assert df.count() == 3;
-        
+        assertThat(df.count() == 3).isTrue();
         log.info("测试读取CSV文件（默认分隔符）完成");
     }
 
@@ -259,9 +258,8 @@ public class ReadDataUtilsTest {
         log.info("数据内容:");
         df.show();
         
-        assert df.count() == 2;
-        assert df.schema().fields().length == 3;
-        
+        assertThat(df.count() == 2).isTrue();
+        assertThat(df.schema().fields().length == 3).isTrue();
         log.info("测试读取Parquet文件完成");
     }
 
@@ -280,9 +278,8 @@ public class ReadDataUtilsTest {
         log.info("数据内容:");
         df.show();
         
-        assert df.count() == 2;
-        assert df.schema().fields().length == 3;
-        
+        assertThat(df.count() == 2).isTrue();
+        assertThat(df.schema().fields().length == 3).isTrue();
         log.info("测试读取ORC文件完成");
     }
 
@@ -301,10 +298,9 @@ public class ReadDataUtilsTest {
         log.info("数据内容:");
         df.show();
         
-        assert df.count() == 3;
-        assert df.schema().fields().length == 1;
-        assert df.schema().fields()[0].name().equals("raw_text");
-        
+        assertThat(df.count() == 3).isTrue();
+        assertThat(df.schema().fields().length == 1).isTrue();
+        assertThat(df.schema().fields()[0].name().equals("raw_text")).isTrue();
         log.info("测试读取文本文件完成");
     }
 
@@ -323,9 +319,8 @@ public class ReadDataUtilsTest {
         log.info("数据内容:");
         df.show();
         
-        assert df.count() == 3;
-        assert df.schema().fields()[0].name().equals("content");
-        
+        assertThat(df.count() == 3).isTrue();
+        assertThat(df.schema().fields()[0].name().equals("content")).isTrue();
         log.info("测试读取文本文件（自定义列名）完成");
     }
 
@@ -341,8 +336,7 @@ public class ReadDataUtilsTest {
         
         log.info("列名: {}", df.schema().fields()[0].name());
         
-        assert df.schema().fields()[0].name().equals("raw_text");
-        
+        assertThat(df.schema().fields()[0].name().equals("raw_text")).isTrue();
         log.info("测试读取文本文件（默认列名）完成");
     }
 
