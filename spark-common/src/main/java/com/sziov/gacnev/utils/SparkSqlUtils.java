@@ -18,9 +18,7 @@ import java.util.Objects;
 @Slf4j
 public final class SparkSqlUtils {
 
-    private SparkSqlUtils() {
-        throw new UnsupportedOperationException("工具类不允许实例化");
-    }
+    private SparkSqlUtils() {}
 
     /**
      * 执行SQL查询

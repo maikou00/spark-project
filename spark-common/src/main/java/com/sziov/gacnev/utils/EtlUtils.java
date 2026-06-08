@@ -33,7 +33,7 @@ public final class EtlUtils {
     private static final String EMPTY_STRING = "";
 
     private EtlUtils() {
-        throw new UnsupportedOperationException("工具类不允许实例化");
+        throw new UnsupportedOperationException("Utility class cannot be instantiated");
     }
 
     /**

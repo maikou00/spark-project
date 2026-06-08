@@ -19,9 +19,7 @@ import java.util.List;
 @Slf4j
 public final class PartitionUtils {
 
-    private PartitionUtils() {
-        throw new UnsupportedOperationException("工具类不允许实例化");
-    }
+    private PartitionUtils() {}
 
     /**
      * 添加分区

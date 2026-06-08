@@ -1,7 +1,6 @@
 package com.sziov.gacnev.utils;
 
 import lombok.extern.slf4j.Slf4j;
-import java.util.Objects;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -53,7 +52,7 @@ public final class ReadDataUtils {
      * 私有构造方法，防止实例化
      */
     private ReadDataUtils() {
-        throw new UnsupportedOperationException("工具类不允许实例化");
+        throw new AssertionError("工具类禁止实例化");
     }
 
 
@@ -73,10 +72,6 @@ public final class ReadDataUtils {
                                              String database,
                                              String table,
                                              String partitionFilter) {
-        Objects.requireNonNull(spark, "spark must not be null");
-        Objects.requireNonNull(database, "database must not be null");
-        Objects.requireNonNull(table, "table must not be null");
-        Objects.requireNonNull(partitionFilter, "partitionFilter must not be null");
         String sql = String.format("SELECT * FROM %s.%s WHERE %s", database, table, partitionFilter);
         log.info("读取Hive表SQL-带分区过滤: {}", sql);
         return spark.sql(sql);
@@ -97,9 +92,6 @@ public final class ReadDataUtils {
     public static Dataset<Row> readHiveTable(SparkSession spark,
                                              String database,
                                              String table) {
-        Objects.requireNonNull(spark, "spark must not be null");
-        Objects.requireNonNull(database, "database must not be null");
-        Objects.requireNonNull(table, "table must not be null");
         String sql = String.format("SELECT * FROM %s.%s", database, table);
         log.info("读取Hive表SQL-无分区过滤: {}", sql);
         return spark.sql(sql);
@@ -118,9 +110,6 @@ public final class ReadDataUtils {
     public static Dataset<Row> readJsonWithSchema(SparkSession spark,
                                                   String path,
                                                   StructType customSchema) {
-        Objects.requireNonNull(spark, "spark must not be null");
-        Objects.requireNonNull(path, "path must not be null");
-        Objects.requireNonNull(customSchema, "customSchema must not be null");
         log.info("读取JSON文件: {}, Schema字段数: {}", path, customSchema.fields().length);
         return spark.read()
                 .schema(customSchema)
@@ -145,9 +134,6 @@ public final class ReadDataUtils {
                                                  String path,
                                                  String delimiter,
                                                  StructType customSchema) {
-        Objects.requireNonNull(spark, "spark must not be null");
-        Objects.requireNonNull(path, "path must not be null");
-        Objects.requireNonNull(customSchema, "customSchema must not be null");
         String actualDelimiter = delimiter == null ? DEFAULT_DELIMITER : delimiter;
         log.info("读取CSV文件: {}, 分隔符: {}, Schema字段数: {}", path, actualDelimiter, customSchema.fields().length);
         return spark.read()
@@ -168,8 +154,6 @@ public final class ReadDataUtils {
      * @throws IllegalArgumentException 参数为空时抛出
      */
     public static Dataset<Row> readParquet(SparkSession spark, String path) {
-        Objects.requireNonNull(spark, "spark must not be null");
-        Objects.requireNonNull(path, "path must not be null");
         log.info("读取Parquet文件: {}", path);
         return spark.read().option("mergeSchema", MERGE_SCHEMA_FALSE).parquet(path);
     }
@@ -183,8 +167,6 @@ public final class ReadDataUtils {
      * @throws IllegalArgumentException 参数为空时抛出
      */
     public static Dataset<Row> readOrc(SparkSession spark, String path) {
-        Objects.requireNonNull(spark, "spark must not be null");
-        Objects.requireNonNull(path, "path must not be null");
         log.info("读取ORC文件: {}", path);
         return spark.read().orc(path);
     }
@@ -199,8 +181,6 @@ public final class ReadDataUtils {
      * @throws IllegalArgumentException 参数为空时抛出
      */
     public static Dataset<Row> readText(SparkSession spark, String path) {
-        Objects.requireNonNull(spark, "spark must not be null");
-        Objects.requireNonNull(path, "path must not be null");
         log.info("读取文本文件: {}", path);
         return spark.read().textFile(path).toDF(TEXT_COLUMN_NAME);
     }
@@ -215,8 +195,6 @@ public final class ReadDataUtils {
      * @throws IllegalArgumentException 参数为空时抛出
      */
     public static Dataset<Row> readText(SparkSession spark, String path, String columnName) {
-        Objects.requireNonNull(spark, "spark must not be null");
-        Objects.requireNonNull(path, "path must not be null");
         String actualColumnName = columnName == null ? TEXT_COLUMN_NAME : columnName;
         log.info("读取文本文件: {}, 列名: {}", path, actualColumnName);
         return spark.read().textFile(path).toDF(actualColumnName);

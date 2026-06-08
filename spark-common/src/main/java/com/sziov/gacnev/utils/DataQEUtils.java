@@ -17,9 +17,7 @@ import org.apache.spark.sql.functions;
 @Slf4j
 public final class DataQEUtils {
 
-    private DataQEUtils() {
-        throw new UnsupportedOperationException("工具类不允许实例化");
-    }
+    private DataQEUtils() {}
 
     /**
      * 检查表是否存在
