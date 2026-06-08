@@ -1,0 +1,3 @@
+com.sziov.gacnev.datasource.impl.HiveSource
+com.sziov.gacnev.datasource.impl.ClickHouseSource
+com.sziov.gacnev.datasource.impl.RedisSource
