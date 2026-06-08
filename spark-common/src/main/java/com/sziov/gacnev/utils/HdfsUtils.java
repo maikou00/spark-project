@@ -18,7 +18,9 @@ import java.util.Objects;
 @Slf4j
 public final class HdfsUtils {
 
-    private HdfsUtils() {}
+    private HdfsUtils() {
+        throw new UnsupportedOperationException("工具类不允许实例化");
+    }
 
     /**
      * 获取FileSystem
