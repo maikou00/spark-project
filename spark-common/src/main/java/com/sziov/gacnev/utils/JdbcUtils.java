@@ -17,9 +17,7 @@ import java.util.Objects;
 @Slf4j
 public final class JdbcUtils {
 
-    private JdbcUtils() {
-        throw new UnsupportedOperationException("工具类不允许实例化");
-    }
+    private JdbcUtils() {}
 
     /**
      * 获取数据库连接
@@ -145,8 +143,7 @@ public final class JdbcUtils {
             log.error("Failed to execute query: {}", sql, e);
             throw new RuntimeException("Failed to execute query", e);
         } finally {
-            closeResultSet(resultSet);
-            closeStatement(statement);
+            closeAll(null, statement, resultSet);
         }
     }
 

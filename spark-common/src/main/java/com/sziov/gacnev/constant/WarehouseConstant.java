@@ -37,7 +37,5 @@ public final class WarehouseConstant {
     public static final String TIME_ZONE = "Asia/Shanghai";
 
     // 私有构造
-    private WarehouseConstant() {
-        throw new UnsupportedOperationException("常量类不允许实例化");
-    }
+    private WarehouseConstant() {}
 }

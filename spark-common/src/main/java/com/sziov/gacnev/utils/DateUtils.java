@@ -37,9 +37,7 @@ public final class DateUtils {
     private static final FastDateFormat YEAR_MONTH_FORMAT = FastDateFormat.getInstance(YEAR_MONTH_PATTERN);
     private static final FastDateFormat YEAR_FORMAT = FastDateFormat.getInstance(YEAR_PATTERN);
 
-    private DateUtils() {
-        throw new UnsupportedOperationException("工具类不允许实例化");
-    }
+    private DateUtils() {}
 
     /**
      * 日期格式化为字符串
