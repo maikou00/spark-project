@@ -39,23 +39,36 @@ public class HiveSink implements DataSink {
         String table = options.getResource();
         String writeMode = options.getWriteMode();
 
+        // 切换数据库
+        String currentDb = df.sparkSession().catalog().currentDatabase();
+        df.sparkSession().catalog().setCurrentDatabase(database);
+
         if ("overwrite".equalsIgnoreCase(writeMode)) {
             initHiveConfig(df);
             String partitionKey = config.getExtraOptions().getOrDefault("partitionKey", DEFAULT_PARTITION_KEY);
-            String partitionVal = com.sziov.gacnev.common.DateUtils.getCurrentDate();
+            String partitionVal = resolvePartitionValue(options);
             df.createOrReplaceTempView(TEMP_VIEW_NAME);
             String sql = String.format(
-                    "INSERT OVERWRITE TABLE %s.%s PARTITION (%s='%s') SELECT * FROM %s",
-                    database, table, partitionKey, partitionVal, TEMP_VIEW_NAME
+                    "INSERT OVERWRITE TABLE %s PARTITION (%s='%s') SELECT * FROM %s",
+                    table, partitionKey, partitionVal, TEMP_VIEW_NAME
             );
             log.info("执行Hive静态分区写入SQL: {}", sql);
             df.sparkSession().sql(sql);
-            log.info("Hive静态分区写入完成，表: {}.{}，分区: {}={}", database, table, partitionKey, partitionVal);
+            log.info("Hive静态分区写入完成，库: {}, 表: {}, 分区: {}={}", database, table, partitionKey, partitionVal);
         } else {
-            String tableName = database + "." + table;
-            log.info("执行Hive追加写入，表: {}", tableName);
-            df.write().mode(SaveMode.Append).insertInto(tableName);
+            log.info("执行Hive追加写入，库: {}, 表: {}", database, table);
+            df.write().mode(SaveMode.Append).insertInto(table);
         }
+
+        // 恢复数据库
+        df.sparkSession().catalog().setCurrentDatabase(currentDb);
+    }
+
+    private String resolvePartitionValue(WriteOptions options) {
+        if (options.getPartitionValue() != null && !options.getPartitionValue().isEmpty()) {
+            return options.getPartitionValue();
+        }
+        return com.sziov.gacnev.common.DateUtils.getCurrentDate();
     }
 
     private void initHiveConfig(Dataset<Row> df) {

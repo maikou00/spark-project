@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.sziov.gacnev</groupId>
+        <artifactId>spark-project</artifactId>
+        <version>2.0.0</version>
+    </parent>
+
+    <artifactId>spark-order-statistics</artifactId>
+    <packaging>jar</packaging>
+    <name>Spark Order Statistics</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.sziov.gacnev</groupId>
+            <artifactId>spark-common</artifactId>
+        </dependency>
+        <!-- Spark（scope 由 parent dev profile 的 dependencyManagement 控制） -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_${scala.binary.version}</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_${scala.binary.version}</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-hive_${scala.binary.version}</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+        </dependency>
+    </dependencies>
+</project>
