@@ -29,12 +29,15 @@ public class HiveSource implements DataSource {
         String database = options.getDatabase();
         String table = options.getResource();
         String partitionFilter = options.getPartitionFilter();
-        String fullTableName = (database != null && !database.isEmpty())
-                ? database + "." + table : table;
 
+        if (database != null && !database.isEmpty()) {
+            spark.catalog().setCurrentDatabase(database);
+        }
+
+        String fullTableName = table;
         if (partitionFilter != null && !partitionFilter.isEmpty()) {
             String sql = String.format("SELECT * FROM %s WHERE %s", fullTableName, partitionFilter);
-            log.info("读取Hive表SQL-带分区过滤: {}", sql);
+            log.info("读取Hive表SQL: {}", sql);
             return spark.sql(sql);
         }
         String sql = String.format("SELECT * FROM %s", fullTableName);

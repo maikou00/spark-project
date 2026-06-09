@@ -9,15 +9,7 @@ target/
 dependency-reduced-pom.xml
 
 # === IDE - 个人配置不进版本库 ===
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/usage.statistics.xml
-.idea/navEditor.xml
-.idea/dbnavigator.xml
-.idea/json_assistant_history.xml
-.idea/qaplug_profiles.xml
-.idea/scala_compiler.xml
-.idea/libraries/
+.idea/
 *.iml
 *.iws
 *.ipr
@@ -43,4 +35,3 @@ test-output/
 surefire-reports/
 jacoco*.exec
 data/output/
-${project.basedir}/

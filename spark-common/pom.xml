@@ -56,5 +56,26 @@
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
         </dependency>
+        <!-- ClickHouse -->
+        <dependency>
+            <groupId>com.clickhouse</groupId>
+            <artifactId>clickhouse-jdbc</artifactId>
+            <classifier>all</classifier>
+        </dependency>
+        <!-- Elasticsearch -->
+        <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch-spark-30_${scala.binary.version}</artifactId>
+        </dependency>
+        <!-- MongoDB -->
+        <dependency>
+            <groupId>org.mongodb.spark</groupId>
+            <artifactId>mongo-spark-connector_${scala.binary.version}</artifactId>
+        </dependency>
+        <!-- Redis -->
+        <dependency>
+            <groupId>com.redislabs</groupId>
+            <artifactId>spark-redis_${scala.binary.version}</artifactId>
+        </dependency>
     </dependencies>
 </project>

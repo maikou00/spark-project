@@ -71,9 +71,4 @@
 
 ## IDE 与工程环境
 
-- `.idea/` 不入库，必须在 `.gitignore` 中（含本地路径、运行历史、Maven 执行记录）
-- 如已被跟踪：
-  ```bash
-  echo ".idea/" >> .gitignore && git rm --cached -r .idea/ && git add .gitignore
-  ```
 - 禁止在已有项目内执行 `mvn archetype:generate`

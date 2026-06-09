@@ -20,4 +20,9 @@ public class WriteOptions {
     private String writeMode;
     private int repartitionNum;
     private int batchSize;
+    /**
+     * 分区值，覆盖默认的当前日期。
+     * 用于历史数据回刷场景。
+     */
+    private String partitionValue;
 }
