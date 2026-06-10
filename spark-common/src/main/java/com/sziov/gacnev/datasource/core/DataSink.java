@@ -6,10 +6,11 @@ import org.apache.spark.sql.Row;
 /**
  * 数据源写入接口。
  *
+ * @param <C> 数据源配置类型
  * @author maikou
  * @since 2026-06-09
  */
-public interface DataSink {
+public interface DataSink<C> {
 
     void write(Dataset<Row> df, WriteOptions options);
 

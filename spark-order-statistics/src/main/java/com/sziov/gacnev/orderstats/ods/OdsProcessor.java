@@ -1,6 +1,6 @@
 package com.sziov.gacnev.orderstats.ods;
 
-import com.sziov.gacnev.datasource.core.DataSourceConfig;
+import com.sziov.gacnev.datasource.hive.HiveConfig;
 import com.sziov.gacnev.datasource.core.ReadOptions;
 import com.sziov.gacnev.datasource.hive.HiveSource;
 import com.sziov.gacnev.etl.DataQEUtils;
@@ -28,7 +28,7 @@ public final class OdsProcessor {
     public OdsProcessor(SparkSession spark, String dt) {
         this.spark = spark;
         this.dt = dt;
-        this.hiveSource = new HiveSource(new DataSourceConfig());
+        this.hiveSource = new HiveSource(new HiveConfig());
     }
 
     public Dataset<Row> readOrderEvents() {

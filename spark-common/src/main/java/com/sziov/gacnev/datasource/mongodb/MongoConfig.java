@@ -1,8 +1,9 @@
 package com.sziov.gacnev.datasource.mongodb;
 
-import com.sziov.gacnev.datasource.core.DataSourceConfig;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * MongoDB 配置。
@@ -11,15 +12,17 @@ import lombok.EqualsAndHashCode;
  * @since 2026-06-09
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class MongoConfig extends DataSourceConfig {
-    private String uri;
+public class MongoConfig {
+    private String uri = "mongodb://localhost:27017";
     private String database;
+    private int maxRetries = 3;
 
-    public static MongoConfig fromProps(java.util.Properties props) {
-        MongoConfig cfg = new MongoConfig();
-        cfg.setUri(props.getProperty("datasource.mongo.uri", "mongodb://localhost:27017"));
-        cfg.setDatabase(props.getProperty("datasource.mongo.database", ""));
-        return cfg;
+    public Map<String, String> toSparkOptions() {
+        Map<String, String> opts = new HashMap<>();
+        opts.put("spark.mongodb.connection.uri", uri);
+        if (database != null) {
+            opts.put("spark.mongodb.database", database);
+        }
+        return opts;
     }
 }

@@ -1,7 +1,8 @@
 package com.sziov.gacnev.datasource.hive;
 
 import com.sziov.gacnev.AbstractSparkTest;
-import com.sziov.gacnev.datasource.core.*;
+import com.sziov.gacnev.datasource.core.ReadOptions;
+import com.sziov.gacnev.datasource.core.WriteOptions;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -12,6 +13,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,8 +41,10 @@ class HiveSourceSinkTest extends AbstractSparkTest {
     void hiveSink_write_append_writesDataToTable() {
         String tbl = uniqueTable();
         sampleDf().write().mode("overwrite").saveAsTable(tbl);
-        DataSourceConfig config = new DataSourceConfig();
-        config.getExtraOptions().put("database", "default");
+        Map<String, String> extraOptions = new HashMap<>();
+        extraOptions.put("database", "default");
+        HiveConfig config = new HiveConfig();
+        config.setExtraOptions(extraOptions);
         WriteOptions opts = WriteOptions.builder().resource(tbl).writeMode("append").build();
         new HiveSink(config).write(sampleDf(), opts);
         assertThat(spark.table(tbl).count()).isEqualTo(4);
@@ -50,7 +55,7 @@ class HiveSourceSinkTest extends AbstractSparkTest {
     void hiveSource_read_withDatabase_readsCorrectly() {
         String tbl = uniqueTable();
         sampleDf().write().mode("overwrite").saveAsTable(tbl);
-        DataSourceConfig config = new DataSourceConfig();
+        HiveConfig config = new HiveConfig();
         ReadOptions opts = ReadOptions.builder().resource(tbl).database("default").build();
         Dataset<Row> result = new HiveSource(config).read(spark, opts);
         assertThat(result.count()).isEqualTo(2);
@@ -61,7 +66,7 @@ class HiveSourceSinkTest extends AbstractSparkTest {
     void hiveSource_read_noDatabase_readsCorrectly() {
         String tbl = uniqueTable();
         sampleDf().write().mode("overwrite").saveAsTable(tbl);
-        DataSourceConfig config = new DataSourceConfig();
+        HiveConfig config = new HiveConfig();
         ReadOptions opts = ReadOptions.builder().resource(tbl).build();
         Dataset<Row> result = new HiveSource(config).read(spark, opts);
         assertThat(result.count()).isEqualTo(2);
@@ -80,9 +85,11 @@ class HiveSourceSinkTest extends AbstractSparkTest {
         }));
         df.withColumn("dt", org.apache.spark.sql.functions.lit("2026-06-09"))
                 .write().mode("overwrite").partitionBy("dt").saveAsTable(tbl);
-        DataSourceConfig config = new DataSourceConfig();
-        config.getExtraOptions().put("database", "default");
-        config.getExtraOptions().put("partitionKey", "dt");
+        Map<String, String> extraOptions = new HashMap<>();
+        extraOptions.put("database", "default");
+        extraOptions.put("partitionKey", "dt");
+        HiveConfig config = new HiveConfig();
+        config.setExtraOptions(extraOptions);
         WriteOptions opts = WriteOptions.builder().resource(tbl).writeMode("overwrite").build();
         new HiveSink(config).write(df, opts);
         assertThat(spark.table(tbl).count()).isGreaterThanOrEqualTo(2);

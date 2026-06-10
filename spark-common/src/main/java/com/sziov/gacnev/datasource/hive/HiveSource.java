@@ -1,7 +1,6 @@
 package com.sziov.gacnev.datasource.hive;
 
 import com.sziov.gacnev.datasource.core.DataSource;
-import com.sziov.gacnev.datasource.core.DataSourceConfig;
 import com.sziov.gacnev.datasource.core.ReadOptions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
@@ -15,12 +14,11 @@ import org.apache.spark.sql.SparkSession;
  * @since 2026-06-09
  */
 @Slf4j
-public class HiveSource implements DataSource {
+public class HiveSource implements DataSource<HiveConfig> {
 
-    @SuppressWarnings("unused")
-    private final DataSourceConfig config;
+    private final HiveConfig config;
 
-    public HiveSource(DataSourceConfig config) {
+    public HiveSource(HiveConfig config) {
         this.config = config;
     }
 

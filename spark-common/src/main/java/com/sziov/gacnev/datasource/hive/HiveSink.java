@@ -1,7 +1,6 @@
 package com.sziov.gacnev.datasource.hive;
 
 import com.sziov.gacnev.datasource.core.DataSink;
-import com.sziov.gacnev.datasource.core.DataSourceConfig;
 import com.sziov.gacnev.datasource.core.WriteOptions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
@@ -15,12 +14,11 @@ import org.apache.spark.sql.SaveMode;
  * @since 2026-06-09
  */
 @Slf4j
-public class HiveSink implements DataSink {
+public class HiveSink implements DataSink<HiveConfig> {
 
-    @SuppressWarnings("unused")
-    private final DataSourceConfig config;
+    private final HiveConfig config;
 
-    public HiveSink(DataSourceConfig config) {
+    public HiveSink(HiveConfig config) {
         this.config = config;
     }
 
@@ -39,7 +37,6 @@ public class HiveSink implements DataSink {
         String table = options.getResource();
         String writeMode = options.getWriteMode();
 
-        // 切换数据库
         String currentDb = df.sparkSession().catalog().currentDatabase();
         df.sparkSession().catalog().setCurrentDatabase(database);
 
@@ -60,7 +57,6 @@ public class HiveSink implements DataSink {
             df.write().mode(SaveMode.Append).insertInto(table);
         }
 
-        // 恢复数据库
         df.sparkSession().catalog().setCurrentDatabase(currentDb);
     }
 

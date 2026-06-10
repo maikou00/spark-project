@@ -1,8 +1,9 @@
 package com.sziov.gacnev.datasource.clickhouse;
 
-import com.sziov.gacnev.datasource.core.DataSourceConfig;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * ClickHouse 配置。
@@ -11,20 +12,17 @@ import lombok.EqualsAndHashCode;
  * @since 2026-06-09
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class ClickHouseConfig extends DataSourceConfig {
+public class ClickHouseConfig {
     private String jdbcUrl;
     private String username = "default";
     private String password = "";
     private int batchSize = 10000;
+    private int maxRetries = 3;
 
-    public static ClickHouseConfig fromProps(java.util.Properties props) {
-        ClickHouseConfig cfg = new ClickHouseConfig();
-        cfg.setHosts(props.getProperty("datasource.ck.hosts", "localhost:8123"));
-        cfg.setJdbcUrl("jdbc:clickhouse://" + cfg.getHosts() + "?async_insert=1");
-        cfg.setUsername(props.getProperty("datasource.ck.username", "default"));
-        cfg.setPassword(props.getProperty("datasource.ck.password", ""));
-        cfg.setBatchSize(Integer.parseInt(props.getProperty("datasource.ck.batch.size", "10000")));
-        return cfg;
+    public Map<String, String> toSparkOptions() {
+        Map<String, String> opts = new HashMap<>();
+        opts.put("user", username);
+        opts.put("password", password);
+        return opts;
     }
 }

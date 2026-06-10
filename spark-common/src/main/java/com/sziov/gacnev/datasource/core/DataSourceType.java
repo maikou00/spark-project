@@ -8,7 +8,7 @@ package com.sziov.gacnev.datasource.core;
  */
 public enum DataSourceType {
     HIVE,
-    FILE_CSV, FILE_JSON, FILE_PARQUET, FILE_ORC, FILE_TEXT,
+    CSV, JSON, PARQUET, ORC, TEXT,
     CLICKHOUSE,
     ELASTICSEARCH, MONGODB, REDIS,
     KAFKA

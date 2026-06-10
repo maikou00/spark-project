@@ -1,7 +1,6 @@
 package com.sziov.gacnev.datasource.clickhouse;
 
 import com.sziov.gacnev.datasource.core.DataSource;
-import com.sziov.gacnev.datasource.core.DataSourceConfig;
 import com.sziov.gacnev.datasource.core.ReadOptions;
 import com.sziov.gacnev.common.RetryUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -18,11 +17,11 @@ import java.util.Properties;
  * @since 2026-06-09
  */
 @Slf4j
-public class ClickHouseSource implements DataSource {
+public class ClickHouseSource implements DataSource<ClickHouseConfig> {
     private final ClickHouseConfig config;
 
-    public ClickHouseSource(DataSourceConfig config) {
-        this.config = (ClickHouseConfig) config;
+    public ClickHouseSource(ClickHouseConfig config) {
+        this.config = config;
     }
 
     @Override

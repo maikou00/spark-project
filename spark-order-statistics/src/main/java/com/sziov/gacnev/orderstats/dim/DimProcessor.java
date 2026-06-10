@@ -1,6 +1,6 @@
 package com.sziov.gacnev.orderstats.dim;
 
-import com.sziov.gacnev.datasource.core.DataSourceConfig;
+import com.sziov.gacnev.datasource.hive.HiveConfig;
 import com.sziov.gacnev.datasource.core.WriteOptions;
 import com.sziov.gacnev.datasource.hive.HiveSink;
 import com.sziov.gacnev.etl.EtlUtils;
@@ -96,7 +96,7 @@ public final class DimProcessor {
     }
 
     private void writeToDim(Dataset<Row> df, String tableName, String dimKey) {
-        DataSourceConfig config = new DataSourceConfig();
+        HiveConfig config = new HiveConfig();
         config.getExtraOptions().put("database", "dim");
         HiveSink sink = new HiveSink(config);
         WriteOptions options = new WriteOptions();

@@ -1,6 +1,6 @@
 package com.sziov.gacnev.orderstats.dws;
 
-import com.sziov.gacnev.datasource.core.DataSourceConfig;
+import com.sziov.gacnev.datasource.hive.HiveConfig;
 import com.sziov.gacnev.datasource.core.WriteOptions;
 import com.sziov.gacnev.datasource.hive.HiveSink;
 import com.sziov.gacnev.orderstats.config.OrderStatsConfig;
@@ -93,7 +93,7 @@ public final class DwsProcessor {
     }
 
     private void writeToDws(Dataset<Row> df) {
-        DataSourceConfig config = new DataSourceConfig();
+        HiveConfig config = new HiveConfig();
         config.getExtraOptions().put("database", "dws");
         HiveSink sink = new HiveSink(config);
         WriteOptions options = new WriteOptions();

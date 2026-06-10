@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * 统一写入选项。
  *
@@ -25,4 +28,20 @@ public class WriteOptions {
      * 用于历史数据回刷场景。
      */
     private String partitionValue;
+
+    /**
+     * 将 WriteOptions 转换为 Spark option 键值对。
+     *
+     * @return Spark 写入选项 Map
+     */
+    public Map<String, String> toSparkOptions() {
+        Map<String, String> opts = new HashMap<>();
+        if (batchSize > 0) {
+            opts.put("batchsize", String.valueOf(batchSize));
+        }
+        if (repartitionNum > 0) {
+            opts.put("repartitionNum", String.valueOf(repartitionNum));
+        }
+        return opts;
+    }
 }

@@ -1,6 +1,6 @@
 package com.sziov.gacnev.orderstats.dwd;
 
-import com.sziov.gacnev.datasource.core.DataSourceConfig;
+import com.sziov.gacnev.datasource.hive.HiveConfig;
 import com.sziov.gacnev.datasource.core.WriteOptions;
 import com.sziov.gacnev.datasource.hive.HiveSink;
 import com.sziov.gacnev.etl.DataQEUtils;
@@ -121,7 +121,7 @@ public final class DwdProcessor {
     }
 
     private void writeToDwd(Dataset<Row> df) {
-        DataSourceConfig config = new DataSourceConfig();
+        HiveConfig config = new HiveConfig();
         config.getExtraOptions().put("database", "dwd");
         HiveSink sink = new HiveSink(config);
         WriteOptions options = new WriteOptions();

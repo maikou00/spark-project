@@ -1,8 +1,9 @@
 package com.sziov.gacnev.datasource.elasticsearch;
 
-import com.sziov.gacnev.datasource.core.DataSourceConfig;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Elasticsearch 配置。
@@ -11,20 +12,22 @@ import lombok.EqualsAndHashCode;
  * @since 2026-06-09
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class ElasticsearchConfig extends DataSourceConfig {
-    /** ES 端口 */
+public class ElasticsearchConfig {
+    private String hosts = "localhost";
     private int port = 9200;
-    /** 是否自动创建索引 */
     private boolean indexAutoCreate = true;
-    /** 写入批量大小 */
     private int batchSize = 1000;
+    private int maxRetries = 3;
 
-    public static ElasticsearchConfig fromProps(java.util.Properties props) {
-        ElasticsearchConfig cfg = new ElasticsearchConfig();
-        cfg.setHosts(props.getProperty("datasource.es.hosts", "localhost"));
-        cfg.setPort(Integer.parseInt(props.getProperty("datasource.es.port", "9200")));
-        cfg.setIndexAutoCreate(Boolean.parseBoolean(props.getProperty("datasource.es.index.auto.create", "true")));
-        return cfg;
+    public Map<String, String> toSparkOptions() {
+        Map<String, String> opts = new HashMap<>();
+        opts.put("es.nodes", hosts);
+        opts.put("es.port", String.valueOf(port));
+        opts.put("es.index.auto.create", String.valueOf(indexAutoCreate));
+        opts.put("es.nodes.wan.only", "true");
+        if (batchSize > 0) {
+            opts.put("es.batch.size.entries", String.valueOf(batchSize));
+        }
+        return opts;
     }
 }

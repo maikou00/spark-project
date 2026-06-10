@@ -1,10 +1,8 @@
 package com.sziov.gacnev.datasource.clickhouse;
 
 import com.sziov.gacnev.datasource.core.DataSink;
-import com.sziov.gacnev.datasource.core.DataSourceConfig;
 import com.sziov.gacnev.datasource.core.WriteOptions;
 import com.sziov.gacnev.common.JdbcUtils;
-import java.util.concurrent.TimeoutException;
 import com.sziov.gacnev.common.RetryUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
@@ -12,6 +10,7 @@ import org.apache.spark.sql.Row;
 
 import java.sql.Connection;
 import java.util.Properties;
+import java.util.concurrent.TimeoutException;
 
 /**
  * ClickHouse 数据写入。
@@ -20,11 +19,11 @@ import java.util.Properties;
  * @since 2026-06-09
  */
 @Slf4j
-public class ClickHouseSink implements DataSink {
+public class ClickHouseSink implements DataSink<ClickHouseConfig> {
     private final ClickHouseConfig config;
 
-    public ClickHouseSink(DataSourceConfig config) {
-        this.config = (ClickHouseConfig) config;
+    public ClickHouseSink(ClickHouseConfig config) {
+        this.config = config;
     }
 
     @Override

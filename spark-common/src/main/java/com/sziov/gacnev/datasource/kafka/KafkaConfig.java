@@ -1,8 +1,9 @@
 package com.sziov.gacnev.datasource.kafka;
 
-import com.sziov.gacnev.datasource.core.DataSourceConfig;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Kafka 配置。
@@ -11,16 +12,21 @@ import lombok.EqualsAndHashCode;
  * @since 2026-06-09
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class KafkaConfig extends DataSourceConfig {
-    private String bootstrapServers;
+public class KafkaConfig {
+    private String bootstrapServers = "localhost:9092";
     private String groupId = "spark-datasource-group";
     private String startingOffsets = "latest";
+    private int maxRetries = 3;
 
-    public static KafkaConfig fromProps(java.util.Properties props) {
-        KafkaConfig cfg = new KafkaConfig();
-        cfg.setBootstrapServers(props.getProperty("datasource.kafka.bootstrap.servers", "localhost:9092"));
-        cfg.setGroupId(props.getProperty("datasource.kafka.group.id", "spark-datasource-group"));
-        return cfg;
+    public Map<String, String> toSparkOptions() {
+        Map<String, String> opts = new HashMap<>();
+        opts.put("kafka.bootstrap.servers", bootstrapServers);
+        if (groupId != null) {
+            opts.put("group.id", groupId);
+        }
+        if (startingOffsets != null) {
+            opts.put("startingOffsets", startingOffsets);
+        }
+        return opts;
     }
 }

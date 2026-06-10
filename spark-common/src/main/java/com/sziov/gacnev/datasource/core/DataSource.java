@@ -7,10 +7,11 @@ import org.apache.spark.sql.SparkSession;
 /**
  * 数据源读取接口。
  *
+ * @param <C> 数据源配置类型
  * @author maikou
  * @since 2026-06-09
  */
-public interface DataSource {
+public interface DataSource<C> {
 
     Dataset<Row> read(SparkSession spark, ReadOptions options);
 
