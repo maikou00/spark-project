@@ -343,6 +343,17 @@ public final class ParamsKeyConstant {
     public static final String REDIS_POOL_TEST_ON_BORROW = "redis.pool.testOnBorrow";
     /** Redis SCAN 转大规模路径的 key 数阈值 */
     public static final String REDIS_SCAN_THRESHOLD = "redis.scan.threshold";
+    // MySQL
+    /** MySQL JDBC 连接地址 */
+    public static final String DATASOURCE_MYSQL_URL = "datasource.mysql.url";
+    /** MySQL 用户名 */
+    public static final String DATASOURCE_MYSQL_USERNAME = "datasource.mysql.username";
+    /** MySQL 密码 */
+    public static final String DATASOURCE_MYSQL_PASSWORD = "datasource.mysql.password";
+    /** MySQL JDBC 驱动类 */
+    public static final String DATASOURCE_MYSQL_DRIVER = "datasource.mysql.driver";
+    /** MySQL 批量写入大小 */
+    public static final String DATASOURCE_MYSQL_BATCH_SIZE = "datasource.mysql.batch.size";
     // Kafka
     /** Kafka Bootstrap Servers */
     public static final String DATASOURCE_KAFKA_BOOTSTRAP_SERVERS = "datasource.kafka.bootstrap.servers";

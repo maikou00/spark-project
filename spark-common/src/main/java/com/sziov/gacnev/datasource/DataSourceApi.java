@@ -77,4 +77,28 @@ public class DataSourceApi<O extends DataSourceOption<O>> {
         DataSink<?> sink = DataSources.getSink(type);
         ((DataSink<O>) sink).write(df, option);
     }
+
+    /**
+     * UPSERT 写入（存在则更新，不存在则插入）。
+     *
+     * @param df       Dataset
+     * @param resource 表名
+     */
+    @SuppressWarnings("unchecked")
+    public void upsert(Dataset<Row> df, String resource) {
+        DataSources.ensureInitialized();
+        option.setResource(resource);
+        DataSink<?> sink = DataSources.getSink(type);
+        ((DataSink<O>) sink).upsert(df, option);
+    }
+
+    /**
+     * 直接执行 SQL 语句（DELETE/UPDATE/TRUNCATE 等）。
+     */
+    @SuppressWarnings("unchecked")
+    public void execute() {
+        DataSources.ensureInitialized();
+        DataSink<?> sink = DataSources.getSink(type);
+        ((DataSink<O>) sink).execute(option);
+    }
 }

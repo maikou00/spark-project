@@ -18,4 +18,12 @@ public interface DataSink<O extends DataSourceOption<O>> {
     default void writeStream(Dataset<Row> df, O options) {
         throw new UnsupportedOperationException("流式写入不支持");
     }
+
+    default void upsert(Dataset<Row> df, O options) {
+        throw new UnsupportedOperationException("UPSERT不支持");
+    }
+
+    default void execute(O options) {
+        throw new UnsupportedOperationException("直接执行SQL不支持");
+    }
 }

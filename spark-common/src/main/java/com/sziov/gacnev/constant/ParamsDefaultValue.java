@@ -319,6 +319,20 @@ public final class ParamsDefaultValue {
     public static final String REDIS_SCAN_THRESHOLD = "10000";
     // Kafka
     /** Kafka 默认 Bootstrap Servers */
+    // MySQL
+    /** MySQL 默认 JDBC 连接地址 */
+    public static final String DATASOURCE_MYSQL_URL = "jdbc:mysql://localhost:3306/spark_test?rewriteBatchedStatements=true\u0026useSSL=false\u0026allowPublicKeyRetrieval=true";
+    /** MySQL 默认用户名 */
+    public static final String DATASOURCE_MYSQL_USERNAME = "root";
+    /** MySQL 默认密码 */
+    public static final String DATASOURCE_MYSQL_PASSWORD = "";
+    /** MySQL 默认 JDBC 驱动类 */
+    public static final String DATASOURCE_MYSQL_DRIVER = "com.mysql.cj.jdbc.Driver";
+    /** MySQL 读取默认分区数 */
+    public static final int DATASOURCE_MYSQL_NUM_PARTITIONS = 10;
+    /** MySQL 写入默认批量大小 */
+    public static final int DATASOURCE_MYSQL_BATCH_SIZE = 5000;
+
     public static final String DATASOURCE_KAFKA_BOOTSTRAP_SERVERS = "localhost:9092";
     /** Kafka 默认消费者组 ID */
     public static final String DATASOURCE_KAFKA_GROUP_ID = "spark-datasource-group";
