@@ -369,6 +369,23 @@ public final class ParamsKeyConstant {
     public static final String DATASOURCE_DORIS_BATCH_SIZE = "datasource.doris.batch.size";
     /** Doris MySQL 协议查询端口 */
     public static final String DATASOURCE_DORIS_QUERY_PORT = "datasource.doris.query.port";
+    /** Doris 两阶段提交 */
+    public static final String DATASOURCE_DORIS_SINK_ENABLE_2PC = "datasource.doris.sink.enable-2pc";
+    /** Doris Stream Load 标签前缀 */
+    public static final String DATASOURCE_DORIS_SINK_LABEL_PREFIX = "datasource.doris.sink.label-prefix";
+    /** Doris Stream Load 最大重试次数 */
+    public static final String DATASOURCE_DORIS_SINK_MAX_RETRIES = "datasource.doris.sink.max-retries";
+    /** Doris 写入批大小 */
+    public static final String DATASOURCE_DORIS_SINK_BATCH_SIZE = "datasource.doris.sink.batch.size";
+    /** Doris 写入批间隔（毫秒） */
+    public static final String DATASOURCE_DORIS_SINK_BATCH_INTERVAL_MS = "datasource.doris.sink.batch.interval.ms";
+    /** Doris 攒批模式 */
+    /** Doris BE 请求重试次数 */
+    public static final String DATASOURCE_DORIS_REQUEST_RETRIES = "datasource.doris.request.retries";
+    /** Doris BE 连接超时（毫秒） */
+    public static final String DATASOURCE_DORIS_REQUEST_CONNECT_TIMEOUT_MS = "datasource.doris.request.connect.timeout.ms";
+    /** Doris BE 读取超时（毫秒） */
+    public static final String DATASOURCE_DORIS_REQUEST_READ_TIMEOUT_MS = "datasource.doris.request.read.timeout.ms";
     // Kafka
     /** Kafka Bootstrap Servers */
     public static final String DATASOURCE_KAFKA_BOOTSTRAP_SERVERS = "datasource.kafka.bootstrap.servers";

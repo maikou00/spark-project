@@ -347,6 +347,24 @@ public final class ParamsDefaultValue {
     public static final int DATASOURCE_DORIS_BATCH_SIZE = 10000;
     /** Doris 默认 MySQL 协议查询端口 */
     public static final String DATASOURCE_DORIS_QUERY_PORT = "9030";
+    /** Doris 默认两阶段提交 */
+    public static final boolean DATASOURCE_DORIS_SINK_ENABLE_2PC = true;
+    /** Doris 默认 Stream Load 标签前缀 */
+    public static final String DATASOURCE_DORIS_SINK_LABEL_PREFIX = "spark_doris";
+    /** Doris 默认 Stream Load 最大重试次数 */
+    public static final int DATASOURCE_DORIS_SINK_MAX_RETRIES = 3;
+    /** Doris 默认写入批大小 */
+    public static final int DATASOURCE_DORIS_SINK_BATCH_SIZE = 10000;
+    /** Doris 默认写入批间隔（毫秒） */
+    public static final int DATASOURCE_DORIS_SINK_BATCH_INTERVAL_MS = 3000;
+    /** Doris 默认攒批模式 */
+    public static final String DATASOURCE_DORIS_SINK_GROUP_COMMIT = "sync_mode";
+    /** Doris 默认 BE 请求重试次数 */
+    public static final int DATASOURCE_DORIS_REQUEST_RETRIES = 3;
+    /** Doris 默认 BE 连接超时（毫秒） */
+    public static final int DATASOURCE_DORIS_REQUEST_CONNECT_TIMEOUT_MS = 30000;
+    /** Doris 默认 BE 读取超时（毫秒） */
+    public static final int DATASOURCE_DORIS_REQUEST_READ_TIMEOUT_MS = 60000;
 
     public static final String DATASOURCE_KAFKA_BOOTSTRAP_SERVERS = "localhost:9092";
     /** Kafka 默认消费者组 ID */

@@ -44,13 +44,27 @@ public class DorisSource implements DataSource<DorisOption> {
         String password = SparkParameterTool.get(dsConfig,
                 ParamsKeyConstant.DATASOURCE_DORIS_PASSWORD, ParamsDefaultValue.DATASOURCE_DORIS_PASSWORD);
 
+        int requestRetries = Integer.parseInt(SparkParameterTool.get(dsConfig,
+                ParamsKeyConstant.DATASOURCE_DORIS_REQUEST_RETRIES,
+                String.valueOf(ParamsDefaultValue.DATASOURCE_DORIS_REQUEST_RETRIES)));
+        int connectTimeout = Integer.parseInt(SparkParameterTool.get(dsConfig,
+                ParamsKeyConstant.DATASOURCE_DORIS_REQUEST_CONNECT_TIMEOUT_MS,
+                String.valueOf(ParamsDefaultValue.DATASOURCE_DORIS_REQUEST_CONNECT_TIMEOUT_MS)));
+        int readTimeout = Integer.parseInt(SparkParameterTool.get(dsConfig,
+                ParamsKeyConstant.DATASOURCE_DORIS_REQUEST_READ_TIMEOUT_MS,
+                String.valueOf(ParamsDefaultValue.DATASOURCE_DORIS_REQUEST_READ_TIMEOUT_MS)));
+
         return RetryUtils.retry(DEFAULT_RETRIES, 1000L, () -> {
             log.info("从 Doris 读取数据（Connector），表: {}", resource);
             DataFrameReader reader = spark.read()
                     .format("doris")
                     .option("doris.fenodes", fenodes)
                     .option("doris.query.port", SparkParameterTool.get(dsConfig,
-                    ParamsKeyConstant.DATASOURCE_DORIS_QUERY_PORT, ParamsDefaultValue.DATASOURCE_DORIS_QUERY_PORT))
+                            ParamsKeyConstant.DATASOURCE_DORIS_QUERY_PORT,
+                            ParamsDefaultValue.DATASOURCE_DORIS_QUERY_PORT))
+                    .option("doris.request.retries", String.valueOf(requestRetries))
+                    .option("doris.request.connect.timeout.ms", String.valueOf(connectTimeout))
+                    .option("doris.request.read.timeout.ms", String.valueOf(readTimeout))
                     .option("user", username)
                     .option("password", password == null ? "" : password);
 
