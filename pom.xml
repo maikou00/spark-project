@@ -37,7 +37,7 @@
     <mysql.version>8.0.28</mysql.version>
 
     <!-- 数据源连接器 -->
-    <clickhouse.version>0.6.0</clickhouse.version>
+    <clickhouse-jdbc.version>0.6.0</clickhouse-jdbc.version>
     <elasticsearch.version>8.12.0</elasticsearch.version>
     <mongodb.version>10.3.0</mongodb.version>
     <!-- 测试 -->
@@ -155,7 +155,7 @@
       <dependency>
         <groupId>com.clickhouse</groupId>
         <artifactId>clickhouse-jdbc</artifactId>
-        <version>${clickhouse.version}</version>
+        <version>${clickhouse-jdbc.version}</version>
         <classifier>all</classifier>
       </dependency>
       <!-- Elasticsearch -->

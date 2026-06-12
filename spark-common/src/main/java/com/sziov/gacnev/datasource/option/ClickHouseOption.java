@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.apache.spark.sql.SaveMode;
 
+import java.util.List;
+
 /**
  * ClickHouse 数据源 Option，包含读和写参数。
  *
@@ -21,9 +23,12 @@ public class ClickHouseOption implements DataSourceOption<ClickHouseOption> {
     /** 资源标识：表名 */
     private String resource;
 
-    /** SQL 查询语句（读） */
+    /** SQL 查询/执行语句 */
     private String query;
 
     /** 写入模式 */
     private SaveMode writeMode;
+
+    /** UPSERT 唯一键列名列表 */
+    private List<String> upsertKeys;
 }
