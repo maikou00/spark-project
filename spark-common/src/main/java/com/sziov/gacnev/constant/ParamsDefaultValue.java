@@ -332,6 +332,21 @@ public final class ParamsDefaultValue {
     public static final int DATASOURCE_MYSQL_NUM_PARTITIONS = 10;
     /** MySQL 写入默认批量大小 */
     public static final int DATASOURCE_MYSQL_BATCH_SIZE = 5000;
+    
+    /** Doris 默认连接地址 */
+    public static final String DATASOURCE_DORIS_URL = "jdbc:mysql://localhost:9030";
+    /** Doris 默认用户名 */
+    public static final String DATASOURCE_DORIS_USERNAME = "root";
+    /** Doris 默认密码 */
+    public static final String DATASOURCE_DORIS_PASSWORD = "";
+    /** Doris 默认驱动 */
+    public static final String DATASOURCE_DORIS_DRIVER = "com.mysql.cj.jdbc.Driver";
+    /** Doris 默认 FE HTTP 地址 */
+    public static final String DATASOURCE_DORIS_FENODES = "localhost:8030";
+    /** Doris 默认批量写入大小 */
+    public static final int DATASOURCE_DORIS_BATCH_SIZE = 10000;
+    /** Doris 默认 MySQL 协议查询端口 */
+    public static final String DATASOURCE_DORIS_QUERY_PORT = "9030";
 
     public static final String DATASOURCE_KAFKA_BOOTSTRAP_SERVERS = "localhost:9092";
     /** Kafka 默认消费者组 ID */

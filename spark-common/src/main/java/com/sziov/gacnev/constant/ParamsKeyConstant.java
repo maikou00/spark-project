@@ -354,6 +354,21 @@ public final class ParamsKeyConstant {
     public static final String DATASOURCE_MYSQL_DRIVER = "datasource.mysql.driver";
     /** MySQL 批量写入大小 */
     public static final String DATASOURCE_MYSQL_BATCH_SIZE = "datasource.mysql.batch.size";
+    // Doris
+    /** Doris JDBC 连接地址 */
+    public static final String DATASOURCE_DORIS_URL = "datasource.doris.url";
+    /** Doris 用户名 */
+    public static final String DATASOURCE_DORIS_USERNAME = "datasource.doris.username";
+    /** Doris 密码 */
+    public static final String DATASOURCE_DORIS_PASSWORD = "datasource.doris.password";
+    /** Doris JDBC 驱动类 */
+    public static final String DATASOURCE_DORIS_DRIVER = "datasource.doris.driver";
+    /** Doris FE HTTP 地址 */
+    public static final String DATASOURCE_DORIS_FENODES = "datasource.doris.fenodes";
+    /** Doris 批量写入大小 */
+    public static final String DATASOURCE_DORIS_BATCH_SIZE = "datasource.doris.batch.size";
+    /** Doris MySQL 协议查询端口 */
+    public static final String DATASOURCE_DORIS_QUERY_PORT = "datasource.doris.query.port";
     // Kafka
     /** Kafka Bootstrap Servers */
     public static final String DATASOURCE_KAFKA_BOOTSTRAP_SERVERS = "datasource.kafka.bootstrap.servers";

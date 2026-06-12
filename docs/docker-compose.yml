@@ -1,4 +1,5 @@
 name: doris-cluster
+
 services:
   doris-fe:
     image: apache/doris:fe-4.1.1
@@ -9,16 +10,16 @@ services:
       - "9030:9030"
       - "9010:9010"
     environment:
-      - FE_MASTER_IP=172.20.0.2
+      - FE_MASTER_IP=172.20.80.2
       - FE_MASTER_PORT=9010
-      - FE_CURRENT_IP=172.20.0.2
+      - FE_CURRENT_IP=172.20.80.2
       - FE_CURRENT_PORT=9010
     volumes:
       - doris-fe-meta:/opt/apache-doris/fe/doris-meta
       - doris-fe-log:/opt/apache-doris/fe/log
     networks:
       doris-net:
-        ipv4_address: 172.20.0.2
+        ipv4_address: 172.20.80.2
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://127.0.0.1:8030/api/bootstrap"]
       interval: 10s
@@ -33,15 +34,15 @@ services:
     ports:
       - "8040:8040"
     environment:
-      - FE_MASTER_IP=172.20.0.2
-      - BE_IP=172.20.0.3
+      - FE_MASTER_IP=172.20.80.2
+      - BE_IP=172.20.80.3
       - BE_PORT=9050
     volumes:
       - doris-be-storage:/opt/apache-doris/be/storage
       - doris-be-log:/opt/apache-doris/be/log
     networks:
       doris-net:
-        ipv4_address: 172.20.0.3
+        ipv4_address: 172.20.80.3
     depends_on:
       doris-fe:
         condition: service_healthy
@@ -57,4 +58,4 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.20.0.0/24
+        - subnet: 172.20.80.0/24

@@ -38,6 +38,7 @@
 
     <!-- 数据源连接器 -->
     <clickhouse-jdbc.version>0.6.0</clickhouse-jdbc.version>
+    <doris-connector.version>26.0.0</doris-connector.version>
     <elasticsearch.version>8.12.0</elasticsearch.version>
     <mongodb.version>10.3.0</mongodb.version>
     <!-- 测试 -->
@@ -151,12 +152,24 @@
         <version>${mysql.version}</version>
         <scope>provided</scope>
       </dependency>
+          <dependency>
+            <groupId>org.apache.doris</groupId>
+            <artifactId>spark-doris-connector-spark-3.3</artifactId>
+            <version>${doris-connector.version}</version>
+            <scope>compile</scope>
+          </dependency>
       <!-- ClickHouse -->
       <dependency>
         <groupId>com.clickhouse</groupId>
         <artifactId>clickhouse-jdbc</artifactId>
         <version>${clickhouse-jdbc.version}</version>
         <classifier>all</classifier>
+      </dependency>
+      <!-- Apache Doris -->
+      <dependency>
+        <groupId>org.apache.doris</groupId>
+        <artifactId>spark-doris-connector-spark-3.3</artifactId>
+        <version>${doris-connector.version}</version>
       </dependency>
       <!-- Elasticsearch -->
       <dependency>
@@ -274,6 +287,12 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>${mysql.version}</version>
+            <scope>compile</scope>
+          </dependency>
+          <dependency>
+            <groupId>org.apache.doris</groupId>
+            <artifactId>spark-doris-connector-spark-3.3</artifactId>
+            <version>${doris-connector.version}</version>
             <scope>compile</scope>
           </dependency>
         </dependencies>

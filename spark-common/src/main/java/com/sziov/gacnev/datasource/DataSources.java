@@ -9,6 +9,7 @@ import com.sziov.gacnev.datasource.option.FileOption;
 import com.sziov.gacnev.datasource.option.HiveOption;
 import com.sziov.gacnev.datasource.option.RedisOption;
 import com.sziov.gacnev.datasource.option.MySqlOption;
+import com.sziov.gacnev.datasource.option.DorisOption;
 import com.sziov.gacnev.spark.SparkParameterTool;
 import lombok.extern.slf4j.Slf4j;
 
@@ -95,6 +96,7 @@ public final class DataSources {
             case MYSQL:      return ParamsKeyConstant.DATASOURCE_MYSQL_URL;
             case REDIS:      return ParamsKeyConstant.DATASOURCE_REDIS_HOST;
             case CLICKHOUSE: return ParamsKeyConstant.DATASOURCE_CK_HOSTS;
+            case DORIS:       return ParamsKeyConstant.DATASOURCE_DORIS_FENODES;
             default:         return null;
         }
     }
@@ -114,6 +116,11 @@ public final class DataSources {
     /** Redis 数据源 */
     public static DataSourceApi<RedisOption> redis() {
         return new DataSourceApi<>(DataSourceType.REDIS, new RedisOption());
+    }
+
+    /** Doris 数据源 */
+    public static DataSourceApi<DorisOption> doris() {
+        return new DataSourceApi<>(DataSourceType.DORIS, new DorisOption());
     }
 
     /** MySQL 数据源 */
