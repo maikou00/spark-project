@@ -156,6 +156,30 @@ class DataSourceDorisTest extends AbstractSparkTest {
 
     // ==================== 辅助方法 ====================
 
+    @Test
+    @DisplayName("Doris_write_read_主键模型_写入并读取_数据正确")
+    void writeReadPrimaryKeyModel() {
+        String t = qualified("doris_pk_test");
+        createPkTable(t);
+        DataSources.doris().write(sampleDf(), o -> o.setWriteMode(SaveMode.Overwrite).setResource(t));
+
+        Dataset<Row> result = DataSources.doris().read(spark, t);
+        result.show();
+        assertThat(result.count()).isEqualTo(2);
+        assertThat(result.columns()).containsExactly("id", "name", "amount");
+
+        dropTable(t);
+    }
+
+    private static void createPkTable(String tbl) {
+        executeJdbc("CREATE TABLE IF NOT EXISTS " + tbl + " ("
+                + "id INT, name VARCHAR(50), amount DOUBLE"
+                + ") UNIQUE KEY(id) "
+                + "DISTRIBUTED BY HASH(id) BUCKETS 1 "
+                + "PROPERTIES ('replication_num' = '1', "
+                + "'enable_unique_key_merge_on_write' = 'true')");
+    }
+
     private static String qualified(String tbl) {
         return DATABASE + "." + tbl;
     }
