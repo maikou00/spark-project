@@ -43,8 +43,13 @@ public class ClickHouseSink implements DataSink<ClickHouseOption> {
         RetryUtils.retry(DEFAULT_RETRIES, 1000L, () -> {
             log.info("写入 ClickHouse，表: {}，模式: {}", options.getResource(), mode);
             if (SaveMode.Overwrite.equals(mode)) {
-                java.sql.DriverManager.getConnection(jdbcUrl, jdbcProps)
-                        .createStatement().execute("TRUNCATE TABLE " + options.getResource());
+                try (java.sql.Connection conn = java.sql.DriverManager.getConnection(jdbcUrl, jdbcProps);
+                     java.sql.Statement stmt = conn.createStatement()) {
+                    try {
+                        stmt.execute("TRUNCATE TABLE " + options.getResource());
+                    } catch (java.sql.SQLException ignored) {
+                    }
+                }
             }
             df.write().mode("append").jdbc(jdbcUrl, options.getResource(), jdbcProps);
             return null;
