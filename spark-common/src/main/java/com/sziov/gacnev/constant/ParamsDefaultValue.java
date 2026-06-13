@@ -369,4 +369,17 @@ public final class ParamsDefaultValue {
     public static final String DATASOURCE_KAFKA_BOOTSTRAP_SERVERS = "localhost:9092";
     /** Kafka 默认消费者组 ID */
     public static final String DATASOURCE_KAFKA_GROUP_ID = "spark-datasource-group";
+
+    // ==================== JDBC 连接池默认值 ====================
+
+    /** 连接池默认最大连接数（注入时按 Runtime.getRuntime().availableProcessors() 动态计算） */
+    public static final int DATASOURCE_POOL_MAX_SIZE = 0;
+    /** 连接池默认最小空闲连接数 */
+    public static final int DATASOURCE_POOL_MIN_IDLE = 1;
+    /** 连接超时默认（毫秒） */
+    public static final int DATASOURCE_POOL_CONNECTION_TIMEOUT = 30000;
+    /** 连接最大生命周期默认（毫秒） */
+    public static final int DATASOURCE_POOL_MAX_LIFETIME = 1800000;
+    /** 空闲超时默认（毫秒） */
+    public static final int DATASOURCE_POOL_IDLE_TIMEOUT = 600000;
 }
