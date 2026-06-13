@@ -4,7 +4,10 @@ import com.sziov.gacnev.common.RetryUtils;
 import com.sziov.gacnev.common.WarehouseException;
 import com.sziov.gacnev.constant.ParamsDefaultValue;
 import com.sziov.gacnev.constant.ParamsKeyConstant;
+import com.sziov.gacnev.datasource.DataSink;
 import com.sziov.gacnev.datasource.DataSource;
+import com.sziov.gacnev.datasource.DataSourceProvider;
+import com.sziov.gacnev.datasource.DataSourceType;
 import com.sziov.gacnev.datasource.DataSources;
 import com.sziov.gacnev.datasource.option.DorisOption;
 import com.sziov.gacnev.spark.SparkParameterTool;
@@ -24,9 +27,18 @@ import java.util.Properties;
  * @since 2026-06-12
  */
 @Slf4j
-public class DorisSource implements DataSource<DorisOption> {
+public class DorisSource implements DataSource<DorisOption>, DataSourceProvider {
 
     private static final int DEFAULT_RETRIES = 3;
+
+    @Override
+    public DataSourceType type() { return DataSourceType.DORIS; }
+
+    @Override
+    public DataSource<?> createSource() { return this; }
+
+    @Override
+    public DataSink<?> createSink() { return new DorisSink(); }
 
     @Override
     public Dataset<Row> read(SparkSession spark, DorisOption options) {
