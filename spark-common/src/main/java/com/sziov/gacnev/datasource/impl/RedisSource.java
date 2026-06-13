@@ -77,12 +77,18 @@ public class RedisSource implements DataSource<RedisOption>, DataSourceProvider,
         
     }
 
-    /** hash 模型：HSCAN + HMGET 分批读取，避免大表阻塞 Redis */
+    /**
+     * hash 模型读取。
+     *
+     * <p>先 HSCAN 收集 field 名称（仅 Driver 端暂存，通常 < 10MB），
+     * 再按 field 分区由各 Executor 并行 HMGET 取值，避免 Driver OOM。</p>
+     */
     private Dataset<Row> readHash(SparkSession spark, String hashKey, RedisOption options) {
         String keyColumn = options.getKeyColumn() != null && !options.getKeyColumn().isEmpty()
                 ? options.getKeyColumn() : KEY_COLUMN;
 
-        List<Row> allRows = new ArrayList<>();
+        // 第一遍：HSCAN 收集 field 名称 + 推断 Schema
+        List<String> fieldNames = new ArrayList<>();
         StructType schema = null;
         StatefulRedisConnection<String, String> conn = RedisUtils.borrowConnection();
         try {
@@ -92,32 +98,60 @@ public class RedisSource implements DataSource<RedisOption>, DataSourceProvider,
                 io.lettuce.core.MapScanCursor<String, String> result = conn.sync().hscan(hashKey, cursor, scanArgs);
                 Map<String, String> batch = result.getMap();
                 if (batch != null && !batch.isEmpty()) {
-                    List<String> fields = new ArrayList<>(batch.keySet());
-                    List<io.lettuce.core.KeyValue<String, String>> values = conn.sync().hmget(hashKey, fields.toArray(new String[0]));
+                    fieldNames.addAll(batch.keySet());
                     if (schema == null) {
-                        schema = inferHashSchemaFromKv(values, keyColumn);
-                        if (schema == null) {
-                            log.warn("RedisSource 无法推断 hash Schema，key: {}", hashKey);
-                            return spark.emptyDataFrame();
-                        }
+                        List<String> batchFields = new ArrayList<>(batch.keySet());
+                        List<io.lettuce.core.KeyValue<String, String>> sampleKvs =
+                                conn.sync().hmget(hashKey, batchFields.toArray(new String[0]));
+                        schema = inferHashSchemaFromKv(sampleKvs, keyColumn);
                     }
-                    parseHashBatch(allRows, values, schema, keyColumn);
                 }
                 cursor = result;
             } while (!cursor.isFinished());
-
-            if (allRows.isEmpty()) {
-                log.warn("RedisSource hash 读取结果为空，key: {}", hashKey);
-                return spark.emptyDataFrame();
-            }
-            log.info("RedisSource hash 读取完成，rows: {}", allRows.size());
-            return spark.createDataFrame(allRows, schema);
         } catch (Exception e) {
             log.error("RedisSource hash 读取失败", e);
             throw new WarehouseException("Redis hash 读取失败", e);
         } finally {
             RedisUtils.returnConnection(conn);
         }
+
+        if (schema == null || fieldNames.isEmpty()) {
+            log.warn("RedisSource hash 读取结果为空或无法推断 Schema，key: {}", hashKey);
+            return spark.emptyDataFrame();
+        }
+
+        final StructType finalSchema = schema;
+        int numPartitions = options.getNumPartitions() > 0 ? options.getNumPartitions() : DEFAULT_PARTITIONS;
+        log.info("RedisSource hash Schema 推断完成，{} fields，{} 分区", fieldNames.size(), numPartitions);
+
+        // 第二遍：分区并行 HMGET
+        Dataset<String> fieldDs = spark.createDataset(fieldNames, Encoders.STRING()).repartition(numPartitions);
+        JavaRDD<Row> rowRdd = fieldDs.toJavaRDD().mapPartitions(
+                fieldIter -> readHashPartition(fieldIter, hashKey, keyColumn, finalSchema));
+        return spark.createDataFrame(rowRdd, finalSchema);
+    }
+
+    private Iterator<Row> readHashPartition(Iterator<String> fieldIter, String hashKey,
+                                             String keyColumn, StructType schema) {
+        List<Row> rows = new ArrayList<>();
+        StatefulRedisConnection<String, String> conn = RedisUtils.borrowConnection();
+        try {
+            List<String> fields = new ArrayList<>();
+            while (fieldIter.hasNext()) {
+                fields.add(fieldIter.next());
+            }
+            if (!fields.isEmpty()) {
+                List<io.lettuce.core.KeyValue<String, String>> kvs =
+                        conn.sync().hmget(hashKey, fields.toArray(new String[0]));
+                parseHashBatch(rows, kvs, schema, keyColumn);
+            }
+        } catch (Exception e) {
+            log.error("Redis hash 分区读取失败", e);
+            throw new WarehouseException("Redis hash 分区读取失败", e);
+        } finally {
+            RedisUtils.returnConnection(conn);
+        }
+        return rows.iterator();
     }
 
     private StructType inferHashSchemaFromKv(List<io.lettuce.core.KeyValue<String, String>> kvs, String keyColumn) {

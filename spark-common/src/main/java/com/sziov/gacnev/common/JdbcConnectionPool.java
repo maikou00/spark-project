@@ -16,8 +16,11 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * JDBC 连接池（Executor 级别单例）。
  *
- * <p>每个 JDBC URL + User 组合持有一个 HikariCP 连接池，
- * 懒加载初始化，通过 JVM shutdown hook 统一关闭。</p>
+ * <p>每个 JDBC URL + User 组合持有一个 HikariCP 连接池，懒加载初始化。</p>
+ *
+ * <p><b>Shutdown 说明：</b>YARN 通过 SIGKILL 终止 Executor 时 JVM shutdown hook 不保证执行，
+ * 残留连接由数据库端 {@code wait_timeout} 回收。连接数上限已由 {@code resolveDefaultMaxPoolSize()}
+ * 限制（优先 Spark executor cores，上限 8），避免高频扩缩容打爆 {@code max_connections}。</p>
  *
  * <p>池参数优先从 app.properties 读取，未配置时使用 {@link ParamsDefaultValue} 默认值。
  * {@code maxSize=0} 时自动按 {@code Runtime.getRuntime().availableProcessors()} 计算。</p>
@@ -92,8 +95,7 @@ public final class JdbcConnectionPool {
         Properties appConfig = loadAppConfig();
         int maxSize = readInt(appConfig, ParamsKeyConstant.DATASOURCE_POOL_MAX_SIZE,
                 ParamsDefaultValue.DATASOURCE_POOL_MAX_SIZE);
-                // maxSize=0 时按 CPU 核数计算；YARN 若未启用 cgroups 需手动设 datasource.pool.maxSize
-        config.setMaximumPoolSize(maxSize > 0 ? maxSize : Math.max(Runtime.getRuntime().availableProcessors(), 2));
+                config.setMaximumPoolSize(maxSize > 0 ? maxSize : resolveDefaultMaxPoolSize());
         config.setMinimumIdle(readInt(appConfig, ParamsKeyConstant.DATASOURCE_POOL_MIN_IDLE,
                 ParamsDefaultValue.DATASOURCE_POOL_MIN_IDLE));
         config.setConnectionTimeout(readInt(appConfig, ParamsKeyConstant.DATASOURCE_POOL_CONNECTION_TIMEOUT,
@@ -107,6 +109,28 @@ public final class JdbcConnectionPool {
         log.info("创建 JDBC 连接池: {}，maxPoolSize={}，minIdle={}，connectionTimeout={}ms",
                 jdbcUrl, config.getMaximumPoolSize(), config.getMinimumIdle(), config.getConnectionTimeout());
         return new HikariDataSource(config);
+    }
+
+    /**
+     * 解析默认连接池大小，优先从 Spark 配置读取 executor cores，
+     * 其次按 CPU 核数（上限 8），防止无 cgroups 环境下打爆数据库连接数。
+     */
+    private static int resolveDefaultMaxPoolSize() {
+        try {
+            Class<?> sparkEnvClass = Class.forName("org.apache.spark.SparkEnv");
+            Object sparkEnv = sparkEnvClass.getMethod("get").invoke(null);
+            if (sparkEnv != null) {
+                Object conf = sparkEnvClass.getMethod("conf").invoke(sparkEnv);
+                Object cores = conf.getClass().getMethod("getInt", String.class, int.class)
+                        .invoke(conf, "spark.executor.cores", -1);
+                int executorCores = ((Number) cores).intValue();
+                if (executorCores > 0) {
+                    return executorCores;
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return Math.min(Runtime.getRuntime().availableProcessors(), 8);
     }
 
     private static Properties loadAppConfig() {

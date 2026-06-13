@@ -93,13 +93,19 @@ public final class RedisUtils {
     }
 
     /**
-     * 全量 SCAN 匹配的 key（小规模场景，Driver 端收集）。
+     * 全量 SCAN 匹配的 key。
+     *
+     * <p><b>⚠️ 注意：</b>所有 Key 在 Driver 端收集，百万级 Key 请使用更精确的模式匹配，
+     * 或通过 {@code redis.scan.threshold} 设置上限（超出抛异常）。</p>
      *
      * @param pattern   匹配模式（如 "user:*"）
      * @param scanCount 每次 SCAN 的 COUNT
      * @return 匹配的 key 列表
      */
     public static List<String> scanAll(String pattern, int scanCount) {
+        int threshold = Integer.parseInt(SparkParameterTool.get(
+                DataSources.getDsConfig(), ParamsKeyConstant.REDIS_SCAN_THRESHOLD,
+                ParamsDefaultValue.REDIS_SCAN_THRESHOLD));
         List<String> keys = new ArrayList<>();
         StatefulRedisConnection<String, String> conn = borrowConnection();
         try {
@@ -108,8 +114,14 @@ public final class RedisUtils {
             do {
                 KeyScanCursor<String> result = conn.sync().scan(cursor, args);
                 keys.addAll(result.getKeys());
+                if (keys.size() > threshold) {
+                    throw new WarehouseException(
+                            "Redis SCAN key 数量超过阈值 (" + threshold + ")，请缩小 pattern 范围或调高 redis.scan.threshold");
+                }
                 cursor = result;
             } while (!cursor.isFinished());
+        } catch (WarehouseException e) {
+            throw e;
         } catch (Exception e) {
             throw new WarehouseException("Redis SCAN 失败: " + pattern, e);
         } finally {
