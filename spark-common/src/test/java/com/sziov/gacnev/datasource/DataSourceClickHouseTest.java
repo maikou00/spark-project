@@ -174,33 +174,14 @@ class DataSourceClickHouseTest extends AbstractSparkTest {
     }
 
     @Test
-    @DisplayName("CK_upsert_主键冲突时更新_数据正确覆盖")
-    void upsertUpdateExisting() {
-        String t = "ck_upsert_update_test";
-        createTable(t);
-        DataSources.clickhouse().write(sampleDf(), o -> o.setWriteMode(SaveMode.Append).setResource(t));
-
-        Dataset<Row> updateDf = spark.createDataFrame(Arrays.asList(
-                RowFactory.create(1, "Alice_new", 150.00),
-                RowFactory.create(3, "Cathy", 300.75)
-        ), new StructType(new org.apache.spark.sql.types.StructField[]{
-                DataTypes.createStructField("id", DataTypes.IntegerType, false),
-                DataTypes.createStructField("name", DataTypes.StringType, true),
-                DataTypes.createStructField("amount", DataTypes.DoubleType, true)
-        }));
-
-        DataSources.clickhouse()
-                .option(o -> o.setUpsertKeys(Collections.singletonList("id")))
-                .upsert(updateDf, t);
-
-        Dataset<Row> result = DataSources.clickhouse().read(spark, t);
-        result.show();
-        assertThat(result.count()).isEqualTo(3);
-        Row row1 = result.filter("id = 1").first();
-        assertThat(row1.getString(1)).isEqualTo("Alice_new");
-        assertThat(row1.getDouble(2)).isEqualTo(150.00);
-
-        dropTable(t);
+    @DisplayName("CK_upsert_ClickHouse不支持_抛UnsupportedOperationException")
+    void upsertNotSupported() {
+        try {
+            DataSources.clickhouse().upsert(sampleDf(), "ck_upsert_not_supported");
+            org.junit.jupiter.api.Assertions.fail("应抛 UnsupportedOperationException");
+        } catch (UnsupportedOperationException e) {
+            assertThat(e.getMessage()).contains("UPSERT不支持");
+        }
     }
 
         /**
