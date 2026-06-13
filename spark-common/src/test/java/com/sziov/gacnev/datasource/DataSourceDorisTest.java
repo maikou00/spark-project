@@ -60,11 +60,22 @@ class DataSourceDorisTest extends AbstractSparkTest {
         }));
     }
 
+    private static Dataset<Row> aggregateDf() {
+        return spark.createDataFrame(Arrays.asList(
+                RowFactory.create(1, "Alice", 100.50),
+                RowFactory.create(1, "Bob", 200.00)
+        ), new StructType(new org.apache.spark.sql.types.StructField[]{
+                DataTypes.createStructField("id", DataTypes.IntegerType, false),
+                DataTypes.createStructField("name", DataTypes.StringType, true),
+                DataTypes.createStructField("amount", DataTypes.DoubleType, true)
+        }));
+    }
+
     @Test
     @DisplayName("Doris_read_整表读取_返回全部数据")
     void readFullTable() {
         String t = qualified("doris_read_test");
-        createTable(t);
+        createUniqueTable(t);
         DataSources.doris().write(sampleDf(), o -> o.setWriteMode(SaveMode.Overwrite).setResource(t));
 
         Dataset<Row> result = DataSources.doris().read(spark, t);
@@ -79,7 +90,7 @@ class DataSourceDorisTest extends AbstractSparkTest {
     @DisplayName("Doris_read_谓词过滤_返回过滤数据")
     void readCustomQuery() {
         String t = qualified("doris_query_test");
-        createTable(t);
+        createUniqueTable(t);
         DataSources.doris().write(sampleDf(), o -> o.setWriteMode(SaveMode.Overwrite).setResource(t));
         Dataset<Row> result = DataSources.doris()
                 
@@ -93,7 +104,7 @@ class DataSourceDorisTest extends AbstractSparkTest {
     @DisplayName("Doris_write_Append追加_数据累加")
     void writeAppend() {
         String t = qualified("doris_append_test");
-        createTable(t);
+        createUniqueTable(t);
         DataSources.doris().write(sampleDf(), o -> o.setWriteMode(SaveMode.Overwrite).setResource(t));
 
         DataSources.doris().write(spark.createDataFrame(Arrays.asList(
@@ -116,7 +127,7 @@ class DataSourceDorisTest extends AbstractSparkTest {
     @DisplayName("Doris_write_Overwrite覆盖_旧数据被清空")
     void writeOverwrite() {
         String t = qualified("doris_overwrite_test");
-        createTable(t);
+        createUniqueTable(t);
         DataSources.doris().write(sampleDf(), o -> o.setWriteMode(SaveMode.Overwrite).setResource(t));
 
         Dataset<Row> newDf = spark.createDataFrame(Arrays.asList(
@@ -140,7 +151,7 @@ class DataSourceDorisTest extends AbstractSparkTest {
     @DisplayName("Doris_execute_执行DDL_操作成功")
     void executeDdl() {
         String t = qualified("doris_execute_test");
-        createTable(t);
+        createUniqueTable(t);
         DataSources.doris().write(sampleDf(), o -> o.setWriteMode(SaveMode.Overwrite).setResource(t));
 
         DataSources.doris()
@@ -154,7 +165,57 @@ class DataSourceDorisTest extends AbstractSparkTest {
         dropTable(t);
     }
 
-    // ==================== 辅助方法 ====================
+    // ==================== 模型读写测试 ====================
+
+    @Test
+    @DisplayName("Doris_write_read_明细模型_写入并读取_数据正确")
+    void writeReadDuplicateModel() {
+        String t = qualified("doris_dup_test");
+        createDuplicateTable(t);
+        DataSources.doris().write(sampleDf(), o -> o.setWriteMode(SaveMode.Overwrite).setResource(t));
+
+        Dataset<Row> result = DataSources.doris().read(spark, t);
+        result.show();
+        assertThat(result.count()).isEqualTo(2);
+        assertThat(result.columns()).containsExactly("id", "name", "amount");
+
+        dropTable(t);
+    }
+
+    @Test
+    @DisplayName("Doris_write_read_聚合模型_写入并读取_聚合正确")
+    void writeReadAggregateModel() {
+        String t = qualified("doris_agg_test");
+        createAggregateTable(t);
+        DataSources.doris().write(aggregateDf(), o -> o.setWriteMode(SaveMode.Overwrite).setResource(t));
+
+        Dataset<Row> result = DataSources.doris().read(spark, t);
+        result.show();
+        assertThat(result.count()).isEqualTo(1);
+        assertThat(result.columns()).containsExactly("id", "name", "amount");
+
+        Row row = result.first();
+        assertThat(row.getInt(0)).isEqualTo(1);
+        assertThat(row.getString(1)).isEqualTo("Bob");
+        assertThat(row.getDouble(2)).isEqualTo(300.50);
+
+        dropTable(t);
+    }
+
+    @Test
+    @DisplayName("Doris_write_read_唯一模型_写入并读取_数据正确")
+    void writeReadUniqueModel() {
+        String t = qualified("doris_unique_test");
+        createUniqueTable(t);
+        DataSources.doris().write(sampleDf(), o -> o.setWriteMode(SaveMode.Overwrite).setResource(t));
+
+        Dataset<Row> result = DataSources.doris().read(spark, t);
+        result.show();
+        assertThat(result.count()).isEqualTo(2);
+        assertThat(result.columns()).containsExactly("id", "name", "amount");
+
+        dropTable(t);
+    }
 
     @Test
     @DisplayName("Doris_write_read_主键模型_写入并读取_数据正确")
@@ -169,6 +230,32 @@ class DataSourceDorisTest extends AbstractSparkTest {
         assertThat(result.columns()).containsExactly("id", "name", "amount");
 
         dropTable(t);
+    }
+
+    // ==================== 辅助方法 ====================
+
+    private static void createDuplicateTable(String tbl) {
+        executeJdbc("CREATE TABLE IF NOT EXISTS " + tbl + " ("
+                + "id INT, name VARCHAR(50), amount DOUBLE"
+                + ") ENGINE = OLAP DUPLICATE KEY(id) "
+                + "DISTRIBUTED BY HASH(id) BUCKETS 1 "
+                + "PROPERTIES ('replication_num' = '1')");
+    }
+
+    private static void createAggregateTable(String tbl) {
+        executeJdbc("CREATE TABLE IF NOT EXISTS " + tbl + " ("
+                + "id INT, name VARCHAR(50) REPLACE, amount DOUBLE SUM"
+                + ") ENGINE = OLAP AGGREGATE KEY(id) "
+                + "DISTRIBUTED BY HASH(id) BUCKETS 1 "
+                + "PROPERTIES ('replication_num' = '1')");
+    }
+
+    private static void createUniqueTable(String tbl) {
+        executeJdbc("CREATE TABLE IF NOT EXISTS " + tbl + " ("
+                + "id INT, name VARCHAR(50), amount DOUBLE"
+                + ") ENGINE = OLAP UNIQUE KEY(id) "
+                + "DISTRIBUTED BY HASH(id) BUCKETS 1 "
+                + "PROPERTIES ('replication_num' = '1')");
     }
 
     private static void createPkTable(String tbl) {
@@ -186,14 +273,6 @@ class DataSourceDorisTest extends AbstractSparkTest {
 
     private static void createDatabase() {
         executeJdbc("CREATE DATABASE IF NOT EXISTS " + DATABASE);
-    }
-
-    private static void createTable(String tbl) {
-        executeJdbc("CREATE TABLE IF NOT EXISTS " + tbl + " ("
-                + "id INT, name VARCHAR(50), amount DOUBLE"
-                + ") ENGINE = OLAP UNIQUE KEY(id) "
-                + "DISTRIBUTED BY HASH(id) BUCKETS 1 "
-                + "PROPERTIES ('replication_num' = '1')");
     }
 
     private static void dropTable(String tbl) {
