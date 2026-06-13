@@ -299,8 +299,6 @@ public final class ParamsKeyConstant {
     public static final String DATASOURCE_DEFAULT_HOSTS = "datasource.default.hosts";
     /** 数据源连接超时（毫秒） */
     public static final String DATASOURCE_DEFAULT_TIMEOUT = "datasource.default.timeout";
-    /** 数据源默认重试次数 */
-    public static final String DATASOURCE_DEFAULT_RETRIES = "datasource.default.retries";
     // Elasticsearch
     /** Elasticsearch 连接地址 */
     public static final String DATASOURCE_ES_HOSTS = "datasource.es.hosts";
@@ -391,7 +389,6 @@ public final class ParamsKeyConstant {
     public static final String DATASOURCE_KAFKA_BOOTSTRAP_SERVERS = "datasource.kafka.bootstrap.servers";
     /** Kafka 消费者组 ID */
     public static final String DATASOURCE_KAFKA_GROUP_ID = "datasource.kafka.group.id";
-
     // ==================== JDBC 连接池配置 ====================
 
     /** 连接池最大连接数 */

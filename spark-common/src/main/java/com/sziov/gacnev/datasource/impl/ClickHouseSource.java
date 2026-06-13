@@ -1,6 +1,5 @@
 package com.sziov.gacnev.datasource.impl;
 
-import com.sziov.gacnev.common.RetryUtils;
 import com.sziov.gacnev.common.WarehouseException;
 import com.sziov.gacnev.constant.ParamsKeyConstant;
 import com.sziov.gacnev.datasource.DataSink;
@@ -35,8 +34,7 @@ public class ClickHouseSource implements DataSource<ClickHouseOption>, DataSourc
     @Override
     public DataSink<?> createSink() { return new ClickHouseSink(); }
 
-    private static final int DEFAULT_RETRIES = 3;
-
+    
     @Override
     public Dataset<Row> read(SparkSession spark, ClickHouseOption options) {
         Properties dsConfig = DataSources.getDsConfig();
@@ -55,9 +53,9 @@ public class ClickHouseSource implements DataSource<ClickHouseOption>, DataSourc
                 ? "(" + options.getQuery() + ") t"
                 : options.getResource();
 
-        return RetryUtils.retry(DEFAULT_RETRIES, 1000L, () -> {
-            log.info("从 ClickHouse 读取数据，表: {}", options.getResource());
-            return spark.read().jdbc(jdbcUrl, tableOrQuery, jdbcProps);
-        });
+        
+    log.info("从 ClickHouse 读取数据，表: {}", options.getResource());
+    return spark.read().jdbc(jdbcUrl, tableOrQuery, jdbcProps);
+        
     }
 }

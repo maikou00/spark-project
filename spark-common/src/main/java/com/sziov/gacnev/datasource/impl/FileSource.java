@@ -1,6 +1,5 @@
 package com.sziov.gacnev.datasource.impl;
 
-import com.sziov.gacnev.common.RetryUtils;
 import com.sziov.gacnev.datasource.DataSource;
 import com.sziov.gacnev.datasource.option.FileOption;
 import lombok.extern.slf4j.Slf4j;
@@ -33,23 +32,23 @@ public class FileSource implements DataSource<FileOption> {
 
     @Override
     public Dataset<Row> read(SparkSession spark, FileOption options) {
-        return RetryUtils.retry(maxRetries, 1000L, () -> {
-            log.info("FileSource 读取数据，format: {}，resource: {}", format, options.getResource());
-            Map<String, String> allOpts = new HashMap<>(sparkOpts);
-            if (options.getEncoding() != null) {
-                allOpts.put("encoding", options.getEncoding());
-            }
-            StructType schema = options.getSchema();
-            if (schema != null) {
-                return spark.read().format(format).options(allOpts).schema(schema).load(options.getResource());
-            }
-            if (options.getDelimiter() != null) {
-                allOpts.put("delimiter", options.getDelimiter());
-            }
-            if (options.getColumnName() != null) {
-                allOpts.put("columnName", options.getColumnName());
-            }
-            return spark.read().format(format).options(allOpts).load(options.getResource());
-        });
+        
+    log.info("FileSource 读取数据，format: {}，resource: {}", format, options.getResource());
+    Map<String, String> allOpts = new HashMap<>(sparkOpts);
+    if (options.getEncoding() != null) {
+        allOpts.put("encoding", options.getEncoding());
+    }
+    StructType schema = options.getSchema();
+    if (schema != null) {
+        return spark.read().format(format).options(allOpts).schema(schema).load(options.getResource());
+    }
+    if (options.getDelimiter() != null) {
+        allOpts.put("delimiter", options.getDelimiter());
+    }
+    if (options.getColumnName() != null) {
+        allOpts.put("columnName", options.getColumnName());
+    }
+    return spark.read().format(format).options(allOpts).load(options.getResource());
+        
     }
 }

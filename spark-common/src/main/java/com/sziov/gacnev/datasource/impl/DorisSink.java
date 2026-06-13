@@ -1,6 +1,5 @@
 package com.sziov.gacnev.datasource.impl;
 
-import com.sziov.gacnev.common.RetryUtils;
 import com.sziov.gacnev.common.WarehouseException;
 
 import com.sziov.gacnev.constant.ParamsDefaultValue;
@@ -31,8 +30,7 @@ import java.util.Properties;
 @Slf4j
 public class DorisSink implements DataSink<DorisOption> {
 
-    private static final int DEFAULT_RETRIES = 3;
-
+    
     @Override
     public void write(Dataset<Row> df, DorisOption options) {
         Properties dsConfig = DataSources.getDsConfig();
@@ -69,30 +67,29 @@ public class DorisSink implements DataSink<DorisOption> {
                 ParamsKeyConstant.DATASOURCE_DORIS_SINK_BATCH_INTERVAL_MS,
                 String.valueOf(ParamsDefaultValue.DATASOURCE_DORIS_SINK_BATCH_INTERVAL_MS));
 
-        RetryUtils.retry(DEFAULT_RETRIES, 1000L, () -> {
-            log.info("Stream Load 写入 Doris，表: {}，模式: {}，2PC: {}", resource, mode, enable2pc);
-            DataFrameWriter writer = df.write()
-                    .format("doris")
-                    .option("doris.fenodes", fenodes)
-                    .option("doris.query.port", queryPort)
-                    .option("doris.sink.enable-2pc", enable2pc)
-                    .option("doris.sink.label-prefix", labelPrefix)
-                    .option("doris.sink.max-retries", maxRetries)
-                    .option("doris.sink.batch.size", batchSize)
-                    .option("doris.sink.batch.interval.ms", batchInterval)
-                    .option("user", username)
-                    .option("password", password == null ? "" : password)
-                    .option("doris.table.identifier", resource);
+        
+    log.info("Stream Load 写入 Doris，表: {}，模式: {}，2PC: {}", resource, mode, enable2pc);
+    DataFrameWriter writer = df.write()
+            .format("doris")
+            .option("doris.fenodes", fenodes)
+            .option("doris.query.port", queryPort)
+            .option("doris.sink.enable-2pc", enable2pc)
+            .option("doris.sink.label-prefix", labelPrefix)
+            .option("doris.sink.max-retries", maxRetries)
+            .option("doris.sink.batch.size", batchSize)
+            .option("doris.sink.batch.interval.ms", batchInterval)
+            .option("user", username)
+            .option("password", password == null ? "" : password)
+            .option("doris.table.identifier", resource);
 
-            if (SaveMode.Overwrite.equals(mode)) {
-                writer = writer.mode("overwrite");
-            } else {
-                writer = writer.mode("append");
-            }
+    if (SaveMode.Overwrite.equals(mode)) {
+        writer = writer.mode("overwrite");
+    } else {
+        writer = writer.mode("append");
+    }
 
-            writer.save();
-            return null;
-        });
+    writer.save();
+        
     }
 
     @Override
@@ -109,13 +106,13 @@ public class DorisSink implements DataSink<DorisOption> {
         Properties jdbcProps = buildJdbcProps(dsConfig);
 
         log.info("执行 Doris DDL/DML: {}", sql);
-        RetryUtils.retry(DEFAULT_RETRIES, 1000L, () -> {
-            try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps);
-                 Statement stmt = conn.createStatement()) {
-                stmt.execute(sql);
-            }
-            return null;
-        });
+        try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps);
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+        } catch (java.sql.SQLException e) {
+            log.error("Doris DDL/DML 执行失败: {}", sql, e);
+            throw new WarehouseException("Doris DDL/DML 执行失败", e);
+        }
     }
 
     private static Properties buildJdbcProps(Properties dsConfig) {

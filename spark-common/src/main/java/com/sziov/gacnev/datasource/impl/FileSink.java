@@ -1,6 +1,5 @@
 package com.sziov.gacnev.datasource.impl;
 
-import com.sziov.gacnev.common.RetryUtils;
 import com.sziov.gacnev.datasource.DataSink;
 import com.sziov.gacnev.datasource.option.FileOption;
 import lombok.extern.slf4j.Slf4j;
@@ -36,16 +35,15 @@ public class FileSink implements DataSink<FileOption> {
         String resource = options.getResource();
         SaveMode mode = options.getWriteMode() != null ? options.getWriteMode() : SaveMode.Append;
 
-        RetryUtils.retry(maxRetries, 1000L, () -> {
-            log.info("FileSink 写入数据，format: {}，resource: {}，mode: {}", format, resource, mode);
-            Map<String, String> allOpts = buildOptions(options);
-            df.write()
-                    .format(format)
-                    .mode(mode)
-                    .options(allOpts)
-                    .save(resource);
-            return null;
-        });
+        
+    log.info("FileSink 写入数据，format: {}，resource: {}，mode: {}", format, resource, mode);
+    Map<String, String> allOpts = buildOptions(options);
+    df.write()
+            .format(format)
+            .mode(mode)
+            .options(allOpts)
+            .save(resource);
+        
     }
 
     @Override

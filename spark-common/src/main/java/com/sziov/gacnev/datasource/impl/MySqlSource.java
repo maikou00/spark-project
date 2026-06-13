@@ -1,6 +1,5 @@
 package com.sziov.gacnev.datasource.impl;
 
-import com.sziov.gacnev.common.RetryUtils;
 import com.sziov.gacnev.common.WarehouseException;
 import com.sziov.gacnev.constant.ParamsDefaultValue;
 import com.sziov.gacnev.constant.ParamsKeyConstant;
@@ -64,20 +63,20 @@ public class MySqlSource implements DataSource<MySqlOption>, DataSourceProvider 
                 ? "(" + options.getQuery() + ") t"
                 : options.getResource();
 
-        return RetryUtils.retry(ParamsDefaultValue.DATASOURCE_DEFAULT_RETRIES, 1000L, () -> {
-            log.info("从 MySQL 读取数据，表: {}", options.getResource());
-            List<String> predicates = options.getPredicates();
-            if (predicates != null && !predicates.isEmpty()) {
-                return spark.read().jdbc(jdbcUrl, tableOrQuery, predicates.toArray(new String[0]), jdbcProps);
-            }
-            String partitionColumn = options.getPartitionColumn();
-            if (partitionColumn != null && !partitionColumn.isEmpty()) {
-                long lower = options.getLowerBound() != null ? options.getLowerBound() : 0L;
-                long upper = options.getUpperBound() != null ? options.getUpperBound() : Long.MAX_VALUE;
-                int parts = options.getNumPartitions() != null ? options.getNumPartitions() : ParamsDefaultValue.DATASOURCE_MYSQL_NUM_PARTITIONS;
-                return spark.read().jdbc(jdbcUrl, tableOrQuery, partitionColumn, lower, upper, parts, jdbcProps);
-            }
-            return spark.read().jdbc(jdbcUrl, tableOrQuery, jdbcProps);
-        });
+        
+    log.info("从 MySQL 读取数据，表: {}", options.getResource());
+    List<String> predicates = options.getPredicates();
+    if (predicates != null && !predicates.isEmpty()) {
+        return spark.read().jdbc(jdbcUrl, tableOrQuery, predicates.toArray(new String[0]), jdbcProps);
+    }
+    String partitionColumn = options.getPartitionColumn();
+    if (partitionColumn != null && !partitionColumn.isEmpty()) {
+        long lower = options.getLowerBound() != null ? options.getLowerBound() : 0L;
+        long upper = options.getUpperBound() != null ? options.getUpperBound() : Long.MAX_VALUE;
+        int parts = options.getNumPartitions() != null ? options.getNumPartitions() : ParamsDefaultValue.DATASOURCE_MYSQL_NUM_PARTITIONS;
+        return spark.read().jdbc(jdbcUrl, tableOrQuery, partitionColumn, lower, upper, parts, jdbcProps);
+    }
+    return spark.read().jdbc(jdbcUrl, tableOrQuery, jdbcProps);
+        
     }
 }

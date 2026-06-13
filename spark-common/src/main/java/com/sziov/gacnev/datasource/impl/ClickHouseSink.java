@@ -1,6 +1,5 @@
 package com.sziov.gacnev.datasource.impl;
 
-import com.sziov.gacnev.common.RetryUtils;
 import com.sziov.gacnev.common.WarehouseException;
 
 import com.sziov.gacnev.constant.ParamsDefaultValue;
@@ -37,8 +36,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ClickHouseSink implements DataSink<ClickHouseOption> {
 
-    private static final int DEFAULT_RETRIES = 3;
-
+    
     @Override
     public void write(Dataset<Row> df, ClickHouseOption options) {
         Properties dsConfig = DataSources.getDsConfig();
@@ -54,22 +52,30 @@ public class ClickHouseSink implements DataSink<ClickHouseOption> {
         jdbcProps.setProperty("password", password);
         SaveMode mode = options.getWriteMode() != null ? options.getWriteMode() : SaveMode.Append;
 
-        RetryUtils.retry(DEFAULT_RETRIES, 1000L, () -> {
-            log.info("写入 ClickHouse，表: {}，模式: {}", options.getResource(), mode);
-            if (SaveMode.Overwrite.equals(mode)) {
-                try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps);
-                     Statement stmt = conn.createStatement()) {
-                    try {
-                        stmt.execute("TRUNCATE TABLE " + options.getResource());
-                    } catch (java.sql.SQLException ignored) {
-                    }
+        log.info("写入 ClickHouse，表: {}，模式: {}", options.getResource(), mode);
+        if (SaveMode.Overwrite.equals(mode)) {
+            try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps);
+                 Statement stmt = conn.createStatement()) {
+                stmt.execute("TRUNCATE TABLE " + options.getResource());
+            } catch (java.sql.SQLException e) {
+                if (isTableNotExists(e)) {
+                    log.info("TRUNCATE 跳过（表不存在）: {}", options.getResource());
+                } else {
+                    log.error("TRUNCATE 失败，表: {}，原因: {}", options.getResource(), e.getMessage());
+                    throw new WarehouseException("Overwrite 模式下 TRUNCATE 失败", e);
                 }
             }
-            df.write().mode("append").jdbc(jdbcUrl, options.getResource(), jdbcProps);
-            return null;
-        });
+        }
+        df.write().mode("append").jdbc(jdbcUrl, options.getResource(), jdbcProps);
     }
 
+    /**
+     * UPSERT 写入（DELETE + INSERT 方案，非原子操作）。
+     *
+     * <p><b>⚠️ 生产警告：</b>本方法使用 "先 ALTER TABLE DELETE 再 INSERT" 实现，
+     * ClickHouse 的 ALTER DELETE 是异步 mutation，且 DELETE 与 INSERT 之间无事务保证。
+     * 推荐使用 ReplacingMergeTree 引擎替代手动 UPSERT。</p>
+     */
     @Override
     public void upsert(Dataset<Row> df, ClickHouseOption options) {
         Properties dsConfig = DataSources.getDsConfig();
@@ -106,24 +112,23 @@ public class ClickHouseSink implements DataSink<ClickHouseOption> {
 
         log.info("UPSERT ClickHouse，表: {}，keys: {}", table, upsertKeys);
 
-        RetryUtils.retry(DEFAULT_RETRIES, 1000L, () -> {
-            df.foreachPartition((ForeachPartitionFunction<Row>) iterator -> {
-                try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps)) {
-                    List<Row> batch = new ArrayList<>();
-                    while (iterator.hasNext()) {
-                        batch.add(iterator.next());
-                        if (batch.size() >= batchSize) {
-                            deleteAndInsert(conn, batch, table, keyIndexes, columns, upsertSql);
-                            batch.clear();
-                        }
-                    }
-                    if (!batch.isEmpty()) {
-                        deleteAndInsert(conn, batch, table, keyIndexes, columns, upsertSql);
-                    }
+        
+    df.foreachPartition((ForeachPartitionFunction<Row>) iterator -> {
+        try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps)) {
+            List<Row> batch = new ArrayList<>();
+            while (iterator.hasNext()) {
+                batch.add(iterator.next());
+                if (batch.size() >= batchSize) {
+                    deleteAndInsert(conn, batch, table, keyIndexes, columns, upsertSql);
+                    batch.clear();
                 }
-            });
-            return null;
-        });
+            }
+            if (!batch.isEmpty()) {
+                deleteAndInsert(conn, batch, table, keyIndexes, columns, upsertSql);
+            }
+        }
+    });
+        
     }
 
     private static void deleteAndInsert(Connection conn, List<Row> batch, String table,
@@ -188,12 +193,18 @@ public class ClickHouseSink implements DataSink<ClickHouseOption> {
         }
 
         log.info("执行 ClickHouse SQL: {}", sql);
-        RetryUtils.retry(DEFAULT_RETRIES, 1000L, () -> {
-            try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps);
-                 Statement stmt = conn.createStatement()) {
-                stmt.execute(sql);
-            }
-            return null;
-        });
+        try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps);
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+        } catch (java.sql.SQLException e) {
+            log.error("ClickHouse SQL 执行失败: {}", sql, e);
+            throw new WarehouseException("ClickHouse SQL 执行失败", e);
+        }
+    }
+
+    private static boolean isTableNotExists(java.sql.SQLException e) {
+        String state = e.getSQLState();
+        // MySQL: 42S02, ClickHouse: 42S02 or 60
+        return "42S02".equals(state) || "60".equals(state);
     }
 }

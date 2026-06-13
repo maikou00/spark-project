@@ -281,8 +281,6 @@ public final class ParamsDefaultValue {
     public static final String DATASOURCE_DEFAULT_HOSTS = "localhost";
     /** 数据源连接超时（毫秒） */
     public static final int DATASOURCE_DEFAULT_TIMEOUT = 30000;
-    /** 数据源默认重试次数 */
-    public static final int DATASOURCE_DEFAULT_RETRIES = 3;
     // Elasticsearch
     /** Elasticsearch 默认连接地址 */
     public static final String DATASOURCE_ES_HOSTS = "localhost";
@@ -332,7 +330,6 @@ public final class ParamsDefaultValue {
     public static final int DATASOURCE_MYSQL_NUM_PARTITIONS = 10;
     /** MySQL 写入默认批量大小 */
     public static final int DATASOURCE_MYSQL_BATCH_SIZE = 5000;
-    
     /** Doris 默认连接地址 */
     public static final String DATASOURCE_DORIS_URL = "jdbc:mysql://localhost:9030";
     /** Doris 默认用户名 */

@@ -2,7 +2,6 @@ package com.sziov.gacnev.datasource.impl;
 
 import com.sziov.gacnev.common.JsonUtils;
 import com.sziov.gacnev.common.RedisUtils;
-import com.sziov.gacnev.common.RetryUtils;
 import com.sziov.gacnev.common.WarehouseException;
 import com.sziov.gacnev.datasource.DataSink;
 import com.sziov.gacnev.datasource.DataSource;
@@ -44,8 +43,7 @@ public class RedisSource implements DataSource<RedisOption>, DataSourceProvider,
 
     private static final int DEFAULT_SCAN_COUNT = 100;
     private static final int DEFAULT_PARTITIONS = 4;
-    private static final int DEFAULT_RETRIES = 3;
-    private static final String KEY_COLUMN = "_key";
+        private static final String KEY_COLUMN = "_key";
 
     @Override
     public DataSourceType type() {
@@ -64,19 +62,19 @@ public class RedisSource implements DataSource<RedisOption>, DataSourceProvider,
 
     @Override
     public Dataset<Row> read(SparkSession spark, RedisOption options) {
-        return RetryUtils.retry(DEFAULT_RETRIES, 1000L, () -> {
-            RedisModel model = options.getRedisModel() != null
-                    ? options.getRedisModel() : RedisModel.HASH;
-            String resource = options.getResource();
-            if (resource == null || resource.isEmpty()) {
-                throw new WarehouseException("Redis 读取必须指定 resource");
-            }
+        
+    RedisModel model = options.getRedisModel() != null
+            ? options.getRedisModel() : RedisModel.HASH;
+    String resource = options.getResource();
+    if (resource == null || resource.isEmpty()) {
+        throw new WarehouseException("Redis 读取必须指定 resource");
+    }
 
-            if (model.isHash()) {
-                return readHash(spark, resource, options);
-            }
-            return readNonHash(spark, options, model);
-        });
+    if (model.isHash()) {
+        return readHash(spark, resource, options);
+    }
+    return readNonHash(spark, options, model);
+        
     }
 
     /** hash 模型：HSCAN + HMGET 分批读取，避免大表阻塞 Redis */

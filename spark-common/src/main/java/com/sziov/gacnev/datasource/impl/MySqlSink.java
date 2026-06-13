@@ -1,6 +1,5 @@
 package com.sziov.gacnev.datasource.impl;
 
-import com.sziov.gacnev.common.RetryUtils;
 import com.sziov.gacnev.common.WarehouseException;
 
 import com.sziov.gacnev.constant.ParamsDefaultValue;
@@ -50,20 +49,21 @@ public class MySqlSink implements DataSink<MySqlOption> {
         Properties jdbcProps = buildJdbcProps(dsConfig);
         SaveMode mode = options.getWriteMode() != null ? options.getWriteMode() : SaveMode.Append;
 
-        RetryUtils.retry(ParamsDefaultValue.DATASOURCE_DEFAULT_RETRIES, 1000L, () -> {
-            log.info("写入 MySQL，表: {}，模式: {}", options.getResource(), mode);
-            if (SaveMode.Overwrite.equals(mode)) {
-                try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps);
-                     Statement stmt = conn.createStatement()) {
-                    try {
-                        stmt.execute("TRUNCATE TABLE " + options.getResource());
-                    } catch (java.sql.SQLException ignored) {
-                    }
+        log.info("写入 MySQL，表: {}，模式: {}", options.getResource(), mode);
+        if (SaveMode.Overwrite.equals(mode)) {
+            try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps);
+                 Statement stmt = conn.createStatement()) {
+                stmt.execute("TRUNCATE TABLE " + options.getResource());
+            } catch (java.sql.SQLException e) {
+                if (isTableNotExists(e)) {
+                    log.info("TRUNCATE 跳过（表不存在）: {}", options.getResource());
+                } else {
+                    log.error("TRUNCATE 失败，表: {}，原因: {}", options.getResource(), e.getMessage());
+                    throw new WarehouseException("Overwrite 模式下 TRUNCATE 失败", e);
                 }
             }
-            df.write().mode("append").jdbc(jdbcUrl, options.getResource(), jdbcProps);
-            return null;
-        });
+        }
+        df.write().mode("append").jdbc(jdbcUrl, options.getResource(), jdbcProps);
     }
 
     @Override
@@ -120,27 +120,26 @@ public class MySqlSink implements DataSink<MySqlOption> {
         String upsertSql = sql.toString();
         log.info("UPSERT MySQL，表: {}，keys: {}，SQL: {}", table, upsertKeys, upsertSql);
 
-        RetryUtils.retry(ParamsDefaultValue.DATASOURCE_DEFAULT_RETRIES, 1000L, () -> {
-            df.foreachPartition((ForeachPartitionFunction<Row>) iterator -> {
-                try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps);
-                     PreparedStatement ps = conn.prepareStatement(upsertSql)) {
-                    int count = 0;
-                    while (iterator.hasNext()) {
-                        Row row = iterator.next();
-                        for (int i = 0; i < columns.length; i++) {
-                            ps.setObject(i + 1, row.get(i));
-                        }
-                        ps.addBatch();
-                        count++;
-                        if (count % batchSize == 0) {
-                            ps.executeBatch();
-                        }
-                    }
+        
+    df.foreachPartition((ForeachPartitionFunction<Row>) iterator -> {
+        try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps);
+             PreparedStatement ps = conn.prepareStatement(upsertSql)) {
+            int count = 0;
+            while (iterator.hasNext()) {
+                Row row = iterator.next();
+                for (int i = 0; i < columns.length; i++) {
+                    ps.setObject(i + 1, row.get(i));
+                }
+                ps.addBatch();
+                count++;
+                if (count % batchSize == 0) {
                     ps.executeBatch();
                 }
-            });
-            return null;
-        });
+            }
+            ps.executeBatch();
+        }
+    });
+        
     }
 
     @Override
@@ -158,13 +157,13 @@ public class MySqlSink implements DataSink<MySqlOption> {
         }
 
         log.info("执行 MySQL SQL: {}", sql);
-        RetryUtils.retry(ParamsDefaultValue.DATASOURCE_DEFAULT_RETRIES, 1000L, () -> {
-            try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps);
-                 Statement stmt = conn.createStatement()) {
-                stmt.execute(sql);
-            }
-            return null;
-        });
+        try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps);
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(sql);
+        } catch (java.sql.SQLException e) {
+            log.error("MySQL SQL 执行失败: {}", sql, e);
+            throw new WarehouseException("MySQL SQL 执行失败", e);
+        }
     }
 
     private static Properties buildJdbcProps(Properties dsConfig) {
@@ -189,5 +188,11 @@ public class MySqlSink implements DataSink<MySqlOption> {
             return sb.toString();
         }
         return "`" + identifier + "`";
+    }
+
+    private static boolean isTableNotExists(java.sql.SQLException e) {
+        String state = e.getSQLState();
+        // MySQL: 42S02, ClickHouse: 42S02 or 60
+        return "42S02".equals(state) || "60".equals(state);
     }
 }
