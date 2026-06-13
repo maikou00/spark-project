@@ -153,12 +153,6 @@
         <version>${mysql.version}</version>
         <scope>provided</scope>
       </dependency>
-          <dependency>
-            <groupId>org.apache.doris</groupId>
-            <artifactId>spark-doris-connector-spark-3.3</artifactId>
-            <version>${doris-connector.version}</version>
-            <scope>compile</scope>
-          </dependency>
       <!-- ClickHouse -->
       <dependency>
         <groupId>com.clickhouse</groupId>
