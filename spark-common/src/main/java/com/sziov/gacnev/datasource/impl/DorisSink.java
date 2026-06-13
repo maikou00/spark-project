@@ -2,20 +2,23 @@ package com.sziov.gacnev.datasource.impl;
 
 import com.sziov.gacnev.common.RetryUtils;
 import com.sziov.gacnev.common.WarehouseException;
+
 import com.sziov.gacnev.constant.ParamsDefaultValue;
 import com.sziov.gacnev.constant.ParamsKeyConstant;
 import com.sziov.gacnev.datasource.DataSink;
 import com.sziov.gacnev.datasource.DataSources;
 import com.sziov.gacnev.datasource.option.DorisOption;
 import com.sziov.gacnev.spark.SparkParameterTool;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
+import com.sziov.gacnev.common.JdbcConnectionPool;
 import java.sql.Statement;
 import java.util.Properties;
 
@@ -107,7 +110,7 @@ public class DorisSink implements DataSink<DorisOption> {
 
         log.info("执行 Doris DDL/DML: {}", sql);
         RetryUtils.retry(DEFAULT_RETRIES, 1000L, () -> {
-            try (Connection conn = DriverManager.getConnection(jdbcUrl, jdbcProps);
+            try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps);
                  Statement stmt = conn.createStatement()) {
                 stmt.execute(sql);
             }

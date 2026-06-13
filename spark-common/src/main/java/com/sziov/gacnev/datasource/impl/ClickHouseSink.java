@@ -2,20 +2,23 @@ package com.sziov.gacnev.datasource.impl;
 
 import com.sziov.gacnev.common.RetryUtils;
 import com.sziov.gacnev.common.WarehouseException;
+
 import com.sziov.gacnev.constant.ParamsDefaultValue;
 import com.sziov.gacnev.constant.ParamsKeyConstant;
 import com.sziov.gacnev.datasource.DataSink;
 import com.sziov.gacnev.datasource.DataSources;
 import com.sziov.gacnev.datasource.option.ClickHouseOption;
 import com.sziov.gacnev.spark.SparkParameterTool;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.apache.spark.api.java.function.ForeachPartitionFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 
+import com.sziov.gacnev.common.JdbcConnectionPool;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -54,8 +57,8 @@ public class ClickHouseSink implements DataSink<ClickHouseOption> {
         RetryUtils.retry(DEFAULT_RETRIES, 1000L, () -> {
             log.info("写入 ClickHouse，表: {}，模式: {}", options.getResource(), mode);
             if (SaveMode.Overwrite.equals(mode)) {
-                try (java.sql.Connection conn = java.sql.DriverManager.getConnection(jdbcUrl, jdbcProps);
-                     java.sql.Statement stmt = conn.createStatement()) {
+                try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps);
+                     Statement stmt = conn.createStatement()) {
                     try {
                         stmt.execute("TRUNCATE TABLE " + options.getResource());
                     } catch (java.sql.SQLException ignored) {
@@ -105,7 +108,7 @@ public class ClickHouseSink implements DataSink<ClickHouseOption> {
 
         RetryUtils.retry(DEFAULT_RETRIES, 1000L, () -> {
             df.foreachPartition((ForeachPartitionFunction<Row>) iterator -> {
-                try (Connection conn = DriverManager.getConnection(jdbcUrl, jdbcProps)) {
+                try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps)) {
                     List<Row> batch = new ArrayList<>();
                     while (iterator.hasNext()) {
                         batch.add(iterator.next());
@@ -186,7 +189,7 @@ public class ClickHouseSink implements DataSink<ClickHouseOption> {
 
         log.info("执行 ClickHouse SQL: {}", sql);
         RetryUtils.retry(DEFAULT_RETRIES, 1000L, () -> {
-            try (Connection conn = DriverManager.getConnection(jdbcUrl, jdbcProps);
+            try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps);
                  Statement stmt = conn.createStatement()) {
                 stmt.execute(sql);
             }

@@ -34,6 +34,7 @@
     <commons-lang3.version>3.12.0</commons-lang3.version>
     <lettuce.version>6.3.2.RELEASE</lettuce.version>
     <commons-pool2.version>2.12.0</commons-pool2.version>
+    <hikaricp.version>4.0.3</hikaricp.version>
     <mysql.version>8.0.28</mysql.version>
 
     <!-- 数据源连接器 -->
@@ -193,6 +194,12 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-pool2</artifactId>
         <version>${commons-pool2.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.zaxxer</groupId>
+        <artifactId>HikariCP</artifactId>
+        <version>${hikaricp.version}</version>
       </dependency>
       <!-- 统一 slf4j 版本，解决 elasticsearch-spark(1.7.6) 和 jedis(1.7.30) 的传递依赖冲突 -->
       <dependency>

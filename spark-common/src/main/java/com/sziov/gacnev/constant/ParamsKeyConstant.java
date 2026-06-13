@@ -391,4 +391,17 @@ public final class ParamsKeyConstant {
     public static final String DATASOURCE_KAFKA_BOOTSTRAP_SERVERS = "datasource.kafka.bootstrap.servers";
     /** Kafka 消费者组 ID */
     public static final String DATASOURCE_KAFKA_GROUP_ID = "datasource.kafka.group.id";
+
+    // ==================== JDBC 连接池配置 ====================
+
+    /** 连接池最大连接数 */
+    public static final String DATASOURCE_POOL_MAX_SIZE = "datasource.pool.maxSize";
+    /** 连接池最小空闲连接数 */
+    public static final String DATASOURCE_POOL_MIN_IDLE = "datasource.pool.minIdle";
+    /** 连接超时（毫秒） */
+    public static final String DATASOURCE_POOL_CONNECTION_TIMEOUT = "datasource.pool.connectionTimeout";
+    /** 连接最大生命周期（毫秒） */
+    public static final String DATASOURCE_POOL_MAX_LIFETIME = "datasource.pool.maxLifetime";
+    /** 空闲超时（毫秒） */
+    public static final String DATASOURCE_POOL_IDLE_TIMEOUT = "datasource.pool.idleTimeout";
 }
