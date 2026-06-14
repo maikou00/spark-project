@@ -1,6 +1,6 @@
 package com.sziov.gacnev.datasource.impl;
 
-import com.sziov.gacnev.common.RetryUtils;
+import com.sziov.gacnev.utils.RetryUtils;
 import com.sziov.gacnev.datasource.DataSink;
 import com.sziov.gacnev.datasource.option.FileOption;
 import lombok.extern.slf4j.Slf4j;

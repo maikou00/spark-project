@@ -1,4 +1,4 @@
-package com.sziov.gacnev.etl;
+package com.sziov.gacnev.utils.etl;
 
 import com.sziov.gacnev.AbstractSparkTest;
 import org.apache.spark.sql.Dataset;

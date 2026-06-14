@@ -1,4 +1,4 @@
-package com.sziov.gacnev.common;
+package com.sziov.gacnev.utils;
 
 /**
  * 字符串工具类 - 仅包含自定义增强方法。

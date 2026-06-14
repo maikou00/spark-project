@@ -1,9 +1,9 @@
-package com.sziov.gacnev.common;
+package com.sziov.gacnev.utils;
 
 import com.sziov.gacnev.constant.ParamsDefaultValue;
 import com.sziov.gacnev.constant.ParamsKeyConstant;
 import com.sziov.gacnev.datasource.DataSources;
-import com.sziov.gacnev.spark.SparkParameterTool;
+import com.sziov.gacnev.utils.spark.SparkParameterTool;
 import io.lettuce.core.KeyScanCursor;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.ScanArgs;

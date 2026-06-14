@@ -1,6 +1,6 @@
 package com.sziov.gacnev.datasource.redis;
 
-import com.sziov.gacnev.common.WarehouseException;
+import com.sziov.gacnev.utils.WarehouseException;
 
 /**
  * Redis 写入模式枚举。

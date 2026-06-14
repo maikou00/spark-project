@@ -1,4 +1,4 @@
-package com.sziov.gacnev.common;
+package com.sziov.gacnev.utils;
 
 import com.sziov.gacnev.constant.ParamsDefaultValue;
 import com.sziov.gacnev.constant.ParamsKeyConstant;

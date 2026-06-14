@@ -1,4 +1,4 @@
-package com.sziov.gacnev.meta;
+package com.sziov.gacnev.utils.meta;
 
 import com.sziov.gacnev.AbstractSparkTest;
 import org.apache.spark.sql.Dataset;

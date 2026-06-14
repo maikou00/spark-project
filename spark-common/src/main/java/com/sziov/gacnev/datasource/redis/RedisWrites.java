@@ -1,6 +1,6 @@
 package com.sziov.gacnev.datasource.redis;
 
-import com.sziov.gacnev.common.JsonUtils;
+import com.sziov.gacnev.utils.JsonUtils;
 import io.lettuce.core.RedisFuture;
 import io.lettuce.core.ScriptOutputType;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;

@@ -1,4 +1,4 @@
-package com.sziov.gacnev.common;
+package com.sziov.gacnev.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;

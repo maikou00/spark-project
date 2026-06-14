@@ -1,6 +1,6 @@
 package com.sziov.gacnev.example;
 
-import com.sziov.gacnev.spark.SparkEnvUtils;
+import com.sziov.gacnev.utils.spark.SparkEnvUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

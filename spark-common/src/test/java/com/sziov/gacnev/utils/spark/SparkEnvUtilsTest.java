@@ -1,4 +1,4 @@
-package com.sziov.gacnev.spark;
+package com.sziov.gacnev.utils.spark;
 
 import com.sziov.gacnev.AbstractSparkTest;
 import org.apache.spark.sql.SparkSession;

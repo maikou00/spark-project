@@ -1,8 +1,8 @@
 package com.sziov.gacnev.example;
 
-import com.sziov.gacnev.etl.EtlUtils;
-import com.sziov.gacnev.spark.SparkEnvUtils;
-import com.sziov.gacnev.spark.SparkParameterTool;
+import com.sziov.gacnev.utils.etl.EtlUtils;
+import com.sziov.gacnev.utils.spark.SparkEnvUtils;
+import com.sziov.gacnev.utils.spark.SparkParameterTool;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.DataTypes;

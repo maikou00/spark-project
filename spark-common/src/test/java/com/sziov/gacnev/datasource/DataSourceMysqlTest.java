@@ -133,7 +133,7 @@ class DataSourceMysqlTest extends AbstractSparkTest {
     void read_missingDatabase() {
         try {
             DataSources.mysql().read(spark, "bare_table");
-        } catch (com.sziov.gacnev.common.WarehouseException e) {
+        } catch (com.sziov.gacnev.utils.WarehouseException e) {
             log.error(e.getMessage());
             return;
         }

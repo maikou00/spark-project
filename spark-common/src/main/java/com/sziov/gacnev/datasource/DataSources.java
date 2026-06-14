@@ -1,6 +1,6 @@
 package com.sziov.gacnev.datasource;
 
-import com.sziov.gacnev.common.WarehouseException;
+import com.sziov.gacnev.utils.WarehouseException;
 import com.sziov.gacnev.constant.ParamsKeyConstant;
 import com.sziov.gacnev.datasource.impl.FileSink;
 import com.sziov.gacnev.datasource.impl.FileSource;
@@ -10,7 +10,7 @@ import com.sziov.gacnev.datasource.option.HiveOption;
 import com.sziov.gacnev.datasource.option.RedisOption;
 import com.sziov.gacnev.datasource.option.MySqlOption;
 import com.sziov.gacnev.datasource.option.DorisOption;
-import com.sziov.gacnev.spark.SparkParameterTool;
+import com.sziov.gacnev.utils.spark.SparkParameterTool;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;

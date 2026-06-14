@@ -1,4 +1,4 @@
-package com.sziov.gacnev.common;
+package com.sziov.gacnev.utils;
 
 import lombok.Getter;
 

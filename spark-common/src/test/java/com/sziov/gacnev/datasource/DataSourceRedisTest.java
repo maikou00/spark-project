@@ -1,7 +1,7 @@
 package com.sziov.gacnev.datasource;
 
 import com.sziov.gacnev.AbstractSparkTest;
-import com.sziov.gacnev.common.RedisUtils;
+import com.sziov.gacnev.utils.RedisUtils;
 import com.sziov.gacnev.datasource.redis.RedisModel;
 import com.sziov.gacnev.datasource.redis.RedisWriteMode;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;

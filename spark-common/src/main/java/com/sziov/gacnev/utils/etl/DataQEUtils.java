@@ -1,4 +1,4 @@
-package com.sziov.gacnev.etl;
+package com.sziov.gacnev.utils.etl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;

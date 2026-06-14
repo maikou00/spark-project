@@ -1,8 +1,8 @@
-package com.sziov.gacnev.meta;
+package com.sziov.gacnev.utils.meta;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
-import com.sziov.gacnev.spark.SparkSqlUtils;
+import com.sziov.gacnev.utils.spark.SparkSqlUtils;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 

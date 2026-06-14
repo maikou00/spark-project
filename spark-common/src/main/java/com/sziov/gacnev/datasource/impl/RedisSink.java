@@ -1,7 +1,7 @@
 package com.sziov.gacnev.datasource.impl;
 
-import com.sziov.gacnev.common.RedisUtils;
-import com.sziov.gacnev.common.WarehouseException;
+import com.sziov.gacnev.utils.RedisUtils;
+import com.sziov.gacnev.utils.WarehouseException;
 import com.sziov.gacnev.datasource.DataSink;
 import com.sziov.gacnev.datasource.option.RedisOption;
 import com.sziov.gacnev.datasource.redis.RedisModel;
