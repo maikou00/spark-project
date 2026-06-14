@@ -15,7 +15,6 @@ services:
       - FE_MASTER_PORT=9010
       - FE_CURRENT_IP=172.20.80.2
       - FE_CURRENT_PORT=9010
-      - JAVA_OPTS=-Xmx768m -Xms256m -XX:MaxDirectMemorySize=64m -XX:MaxMetaspaceSize=96m -XX:ReservedCodeCacheSize=48m
     volumes:
       - doris-fe-meta:/opt/apache-doris/fe/doris-meta
       - doris-fe-log:/opt/apache-doris/fe/log
@@ -53,11 +52,63 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    hostname: mysql
+    mem_limit: 512m
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root123
+      - MYSQL_DATABASE=spark_test
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      doris-net:
+        ipv4_address: 172.20.80.4
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.3
+    container_name: clickhouse
+    hostname: clickhouse
+    mem_limit: 1g
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    environment:
+      - CLICKHOUSE_USER=default
+      - CLICKHOUSE_PASSWORD=ck123
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - clickhouse-log:/var/log/clickhouse-server
+    networks:
+      doris-net:
+        ipv4_address: 172.20.80.5
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
 volumes:
   doris-fe-meta:
   doris-fe-log:
   doris-be-storage:
   doris-be-log:
+  mysql-data:
+  clickhouse-data:
+  clickhouse-log:
 
 networks:
   doris-net:
