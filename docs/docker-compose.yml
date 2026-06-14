@@ -75,6 +75,26 @@ services:
       start_period: 30s
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    hostname: redis
+    mem_limit: 256m
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      doris-net:
+        ipv4_address: 172.20.80.6
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
   clickhouse:
     image: clickhouse/clickhouse-server:24.3
     container_name: clickhouse
@@ -109,6 +129,7 @@ volumes:
   mysql-data:
   clickhouse-data:
   clickhouse-log:
+  redis-data:
 
 networks:
   doris-net:
