@@ -10,7 +10,7 @@ import com.sziov.gacnev.datasource.DataSourceType;
 import com.sziov.gacnev.datasource.option.RedisOption;
 import com.sziov.gacnev.datasource.redis.RedisModel;
 import com.sziov.gacnev.datasource.redis.RedisReads;
-import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.Dataset;
@@ -43,7 +43,7 @@ public class RedisSource implements DataSource<RedisOption>, DataSourceProvider,
 
     private static final int DEFAULT_SCAN_COUNT = 100;
     private static final int DEFAULT_PARTITIONS = 4;
-        private static final String KEY_COLUMN = "_key";
+    private static final String KEY_COLUMN = "_key";
 
     @Override
     public DataSourceType type() {
@@ -62,19 +62,17 @@ public class RedisSource implements DataSource<RedisOption>, DataSourceProvider,
 
     @Override
     public Dataset<Row> read(SparkSession spark, RedisOption options) {
-        
-    RedisModel model = options.getRedisModel() != null
-            ? options.getRedisModel() : RedisModel.HASH;
-    String resource = options.getResource();
-    if (resource == null || resource.isEmpty()) {
-        throw new WarehouseException("Redis 读取必须指定 resource");
-    }
+        RedisModel model = options.getRedisModel() != null
+                ? options.getRedisModel() : RedisModel.HASH;
+        String resource = options.getResource();
+        if (resource == null || resource.isEmpty()) {
+            throw new WarehouseException("Redis 读取必须指定 resource");
+        }
 
-    if (model.isHash()) {
-        return readHash(spark, resource, options);
-    }
-    return readNonHash(spark, options, model);
-        
+        if (model.isHash()) {
+            return readHash(spark, resource, options);
+        }
+        return readNonHash(spark, options, model);
     }
 
     /**
@@ -90,7 +88,7 @@ public class RedisSource implements DataSource<RedisOption>, DataSourceProvider,
         // 第一遍：HSCAN 收集 field 名称 + 推断 Schema
         List<String> fieldNames = new ArrayList<>();
         StructType schema = null;
-        StatefulRedisConnection<String, String> conn = RedisUtils.borrowConnection();
+        StatefulRedisClusterConnection<String, String> conn = RedisUtils.borrowConnection();
         try {
             io.lettuce.core.ScanCursor cursor = io.lettuce.core.ScanCursor.INITIAL;
             io.lettuce.core.ScanArgs scanArgs = io.lettuce.core.ScanArgs.Builder.limit(200);
@@ -127,23 +125,25 @@ public class RedisSource implements DataSource<RedisOption>, DataSourceProvider,
         // 第二遍：分区并行 HMGET
         Dataset<String> fieldDs = spark.createDataset(fieldNames, Encoders.STRING()).repartition(numPartitions);
         JavaRDD<Row> rowRdd = fieldDs.toJavaRDD().mapPartitions(
-                fieldIter -> readHashPartition(fieldIter, hashKey, keyColumn, finalSchema));
+                fieldIter -> hashPartitionRead(hashKey, fieldIter, finalSchema, keyColumn));
         return spark.createDataFrame(rowRdd, finalSchema);
     }
 
-    private Iterator<Row> readHashPartition(Iterator<String> fieldIter, String hashKey,
-                                             String keyColumn, StructType schema) {
+    private Iterator<Row> hashPartitionRead(String hashKey, Iterator<String> fieldIter,
+                                             StructType schema, String keyColumn) {
         List<Row> rows = new ArrayList<>();
-        StatefulRedisConnection<String, String> conn = RedisUtils.borrowConnection();
+        StatefulRedisClusterConnection<String, String> conn = RedisUtils.borrowConnection();
         try {
-            List<String> fields = new ArrayList<>();
             while (fieldIter.hasNext()) {
-                fields.add(fieldIter.next());
-            }
-            if (!fields.isEmpty()) {
-                List<io.lettuce.core.KeyValue<String, String>> kvs =
-                        conn.sync().hmget(hashKey, fields.toArray(new String[0]));
-                parseHashBatch(rows, kvs, schema, keyColumn);
+                List<String> fields = new ArrayList<>();
+                do {
+                    fields.add(fieldIter.next());
+                } while (fieldIter.hasNext() && fields.size() < 200);
+                if (!fields.isEmpty()) {
+                    List<io.lettuce.core.KeyValue<String, String>> kvs =
+                            conn.sync().hmget(hashKey, fields.toArray(new String[0]));
+                    parseHashBatch(rows, kvs, schema, keyColumn);
+                }
             }
         } catch (Exception e) {
             log.error("Redis hash 分区读取失败", e);
@@ -226,10 +226,11 @@ public class RedisSource implements DataSource<RedisOption>, DataSourceProvider,
         return spark.createDataFrame(rowRdd, schema);
     }
 
+
     private Iterator<Row> readPartition(Iterator<String> keyIter, String keyColumn,
                                          StructType schema, RedisModel model) {
         List<Row> rows = new ArrayList<>();
-        StatefulRedisConnection<String, String> conn = RedisUtils.borrowConnection();
+        StatefulRedisClusterConnection<String, String> conn = RedisUtils.borrowConnection();
         try {
             while (keyIter.hasNext()) {
                 String key = keyIter.next();

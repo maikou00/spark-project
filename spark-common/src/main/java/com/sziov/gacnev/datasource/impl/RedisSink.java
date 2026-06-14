@@ -7,14 +7,14 @@ import com.sziov.gacnev.datasource.option.RedisOption;
 import com.sziov.gacnev.datasource.redis.RedisModel;
 import com.sziov.gacnev.datasource.redis.RedisWriteMode;
 import com.sziov.gacnev.datasource.redis.RedisWrites;
-import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
 /**
  * Redis 数据写入
- * <p>一致性语义：PIPELINE/DIRECT/LUA 为 <b>至少一次</b>，TRANSACTION 为 <b>精确一次</b>（同分区内）。</p>，通过 {@link com.sziov.gacnev.datasource.redis.RedisWrites} 支持 pipeline/lua/transaction/direct/async_callback 五种写入模式。
+ * <p>一致性语义：PIPELINE/DIRECT/LUA 为 <b>至少一次</b>。</p>
  *
  * @author maikou
  * @since 2026-06-10
@@ -22,7 +22,7 @@ import org.apache.spark.sql.Row;
 @Slf4j
 public class RedisSink implements DataSink<RedisOption>, java.io.Serializable {
 
-        private static final String DEFAULT_ZSET_SCORE_COLUMN = "score";
+    private static final String DEFAULT_ZSET_SCORE_COLUMN = "score";
 
     @Override
     public void write(Dataset<Row> df, RedisOption options) {
@@ -41,29 +41,27 @@ public class RedisSink implements DataSink<RedisOption>, java.io.Serializable {
         String zsetScoreColumn = options.getZsetScoreColumn() != null
                 ? options.getZsetScoreColumn() : DEFAULT_ZSET_SCORE_COLUMN;
 
-        
-    log.info("RedisSink 写入数据，resource: {}，keyColumn: {}，model: {}，mode: {}",
-            resource, keyColumn, model, writeMode);
+        log.info("RedisSink 写入数据，resource: {}，keyColumn: {}，model: {}，mode: {}",
+                resource, keyColumn, model, writeMode);
 
-    df.foreachPartition(rows -> {
-        RedisWrites writes = new RedisWrites(writeMode, model, luaScript);
-        StatefulRedisConnection<String, String> conn = RedisUtils.borrowConnection();
-        try {
-            writes.begin(conn);
-            while (rows.hasNext()) {
-                Row row = rows.next();
-                double score = extractScore(row, model, zsetScoreColumn);
-                writes.write(conn, row, keyColumn, resource, ttl, score);
+        df.foreachPartition(rows -> {
+            RedisWrites writes = new RedisWrites(writeMode, model, luaScript);
+            StatefulRedisClusterConnection<String, String> conn = RedisUtils.borrowConnection();
+            try {
+                writes.begin(conn);
+                while (rows.hasNext()) {
+                    Row row = rows.next();
+                    double score = extractScore(row, model, zsetScoreColumn);
+                    writes.write(conn, row, keyColumn, resource, ttl, score);
+                }
+                writes.flush(conn);
+            } catch (Exception e) {
+                log.error("RedisSink 分区写入失败", e);
+                throw new WarehouseException("Redis 写入失败", e);
+            } finally {
+                RedisUtils.returnConnection(conn);
             }
-            writes.flush(conn);
-        } catch (Exception e) {
-            log.error("RedisSink 分区写入失败", e);
-            throw new WarehouseException("Redis 写入失败", e);
-        } finally {
-            RedisUtils.returnConnection(conn);
-        }
-    });
-        
+        });
     }
 
     private double extractScore(Row row, RedisModel model, String zsetScoreColumn) {

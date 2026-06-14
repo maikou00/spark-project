@@ -1,8 +1,8 @@
 package com.sziov.gacnev.datasource.redis;
 
 import io.lettuce.core.RedisFuture;
-import io.lettuce.core.api.async.RedisAsyncCommands;
-import io.lettuce.core.api.sync.RedisCommands;
+import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands;
+import io.lettuce.core.cluster.api.sync.RedisAdvancedClusterCommands;
 
 /**
  * Redis 模型命令分发器，将模型→Redis 命令的映射集中在一处，消除各写策略中的重复 switch-case。
@@ -19,7 +19,7 @@ public final class RedisModelCommand {
     /**
      * 同步执行写入命令，返回 expire 目标 key。
      */
-    public static String executeSync(RedisModel model, RedisCommands<String, String> sync,
+    public static String executeSync(RedisModel model, RedisAdvancedClusterCommands<String, String> sync,
                                       String resource, String field, String json, double score) {
         switch (model) {
             case STRING:
@@ -41,7 +41,7 @@ public final class RedisModelCommand {
     /**
      * 异步执行写入命令，返回 {@link RedisFuture} 供调用方追踪。
      */
-    public static RedisFuture<?> executeAsync(RedisModel model, RedisAsyncCommands<String, String> async,
+    public static RedisFuture<?> executeAsync(RedisModel model, RedisAdvancedClusterAsyncCommands<String, String> async,
                                                String resource, String field, String json, double score) {
         switch (model) {
             case STRING:

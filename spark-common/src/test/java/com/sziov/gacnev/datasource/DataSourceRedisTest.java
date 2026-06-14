@@ -4,7 +4,7 @@ import com.sziov.gacnev.AbstractSparkTest;
 import com.sziov.gacnev.common.RedisUtils;
 import com.sziov.gacnev.datasource.redis.RedisModel;
 import com.sziov.gacnev.datasource.redis.RedisWriteMode;
-import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -36,13 +36,14 @@ class DataSourceRedisTest extends AbstractSparkTest {
         Properties p = new Properties();
         p.setProperty("datasource.redis.host", "localhost");
         p.setProperty("datasource.redis.port", "6379");
+        p.setProperty("datasource.redis.auth", "redis123");
         DataSources.init(p);
     }
 
     @AfterEach
     void cleanup() {
         if (!redisKeys.isEmpty() || !redisStringPrefixes.isEmpty()) {
-            StatefulRedisConnection<String, String> conn = RedisUtils.borrowConnection();
+            StatefulRedisClusterConnection<String, String> conn = RedisUtils.borrowConnection();
             try {
                 for (String key : redisKeys) {
                     conn.sync().del(key);
@@ -283,20 +284,6 @@ class DataSourceRedisTest extends AbstractSparkTest {
         DataSources.redis()
                 .option(o -> o.setKeyColumn("id").setRedisModel(RedisModel.HASH)
                         .setRedisWriteMode(RedisWriteMode.PIPELINE).setTtl(300))
-                .write(sampleDf(), table);
-        Dataset<Row> result = DataSources.redis()
-                .option(o -> o.setKeyColumn("id").setRedisModel(RedisModel.HASH))
-                .read(spark, table);
-        assertThat(result.count()).isEqualTo(2);
-    }
-
-    @Test
-    @DisplayName("write_Transaction模式_MULTI_EXEC原子写入_往返正确")
-    void write_transaction() {
-        String table = uniqueHash();
-        DataSources.redis()
-                .option(o -> o.setKeyColumn("id").setRedisModel(RedisModel.HASH)
-                        .setRedisWriteMode(RedisWriteMode.TRANSACTION).setTtl(300))
                 .write(sampleDf(), table);
         Dataset<Row> result = DataSources.redis()
                 .option(o -> o.setKeyColumn("id").setRedisModel(RedisModel.HASH))

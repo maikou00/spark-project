@@ -329,7 +329,6 @@ public final class ParamsKeyConstant {
     public static final String DATASOURCE_REDIS_AUTH = "datasource.redis.auth";
     /** Redis 数据库编号 */
     public static final String DATASOURCE_REDIS_DB = "datasource.redis.db";
-    public static final String DATASOURCE_REDIS_CLUSTER = "datasource.redis.cluster";
     /** Redis 连接池最大连接数 */
     public static final String REDIS_POOL_MAX_TOTAL = "redis.pool.maxTotal";
     /** Redis 连接池最大空闲连接数 */

@@ -3,7 +3,7 @@ package com.sziov.gacnev.datasource.redis;
 import io.lettuce.core.Limit;
 import io.lettuce.core.Range;
 import io.lettuce.core.StreamMessage;
-import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.types.StructType;
@@ -29,7 +29,7 @@ public final class RedisReads {
         throw new UnsupportedOperationException("工具类不允许实例化");
     }
 
-    public static Row readRow(RedisModel model, StatefulRedisConnection<String, String> conn,
+    public static Row readRow(RedisModel model, StatefulRedisClusterConnection<String, String> conn,
                                String key, StructType schema) {
         switch (model) {
             case STRING: return readString(conn, key);
@@ -42,7 +42,7 @@ public final class RedisReads {
         }
     }
 
-    private static Row readString(StatefulRedisConnection<String, String> conn, String key) {
+    private static Row readString(StatefulRedisClusterConnection<String, String> conn, String key) {
         String value = conn.sync().get(key);
         if (value == null) {
             return null;
@@ -50,7 +50,7 @@ public final class RedisReads {
         return RowFactory.create(key, value);
     }
 
-    private static Row readList(StatefulRedisConnection<String, String> conn, String key) {
+    private static Row readList(StatefulRedisClusterConnection<String, String> conn, String key) {
         List<String> values = conn.sync().lrange(key, 0, -1);
         if (values == null || values.isEmpty()) {
             return null;
@@ -58,7 +58,7 @@ public final class RedisReads {
         return RowFactory.create(key, String.join(",", values));
     }
 
-    private static Row readSet(StatefulRedisConnection<String, String> conn, String key) {
+    private static Row readSet(StatefulRedisClusterConnection<String, String> conn, String key) {
         Set<String> members = conn.sync().smembers(key);
         if (members == null || members.isEmpty()) {
             return null;
@@ -66,7 +66,7 @@ public final class RedisReads {
         return RowFactory.create(key, String.join(",", members));
     }
 
-    private static Row readZSet(StatefulRedisConnection<String, String> conn, String key) {
+    private static Row readZSet(StatefulRedisClusterConnection<String, String> conn, String key) {
         List<String> values = conn.sync().zrange(key, 0, -1);
         if (values == null || values.isEmpty()) {
             return null;
@@ -74,7 +74,7 @@ public final class RedisReads {
         return RowFactory.create(key, String.join(",", values));
     }
 
-    private static Row readStream(StatefulRedisConnection<String, String> conn, String key) {
+    private static Row readStream(StatefulRedisClusterConnection<String, String> conn, String key) {
         Range<String> range = Range.create("-", "+");
         Limit limit = Limit.from(STREAM_DEFAULT_COUNT);
         List<StreamMessage<String, String>> messages = conn.sync().xrange(key, range, limit);
@@ -87,7 +87,7 @@ public final class RedisReads {
         return RowFactory.create(key, value);
     }
 
-    private static Row readHash(StatefulRedisConnection<String, String> conn, String key, StructType schema) {
+    private static Row readHash(StatefulRedisClusterConnection<String, String> conn, String key, StructType schema) {
         Map<String, String> hash = conn.sync().hgetall(key);
         if (hash == null || hash.isEmpty()) {
             return null;

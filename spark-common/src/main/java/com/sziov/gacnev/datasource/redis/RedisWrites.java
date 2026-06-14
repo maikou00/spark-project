@@ -3,7 +3,7 @@ package com.sziov.gacnev.datasource.redis;
 import com.sziov.gacnev.common.JsonUtils;
 import io.lettuce.core.RedisFuture;
 import io.lettuce.core.ScriptOutputType;
-import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Row;
 
@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Redis 写入工具类，按模式分发 begin → write → flush 生命周期。
+ * <p>注意：Redis Cluster 不支持 MULTI/EXEC 事务（跨 slot），TRANSACTION 模式已移除，请使用 LUA 模式实现原子操作。</p>
  *
  * @author maikou
  * @since 2026-06-11
@@ -38,7 +39,7 @@ public class RedisWrites {
         this.futures = new ArrayList<>();
     }
 
-    public void begin(StatefulRedisConnection<String, String> conn) {
+    public void begin(StatefulRedisClusterConnection<String, String> conn) {
         batchCount = 0;
         switch (mode) {
             case PIPELINE:
@@ -48,15 +49,12 @@ public class RedisWrites {
                     futures.clear();
                 }
                 break;
-            case TRANSACTION:
-                conn.async().multi();
-                break;
             default:
                 break;
         }
     }
 
-    public void write(StatefulRedisConnection<String, String> conn, Row row,
+    public void write(StatefulRedisClusterConnection<String, String> conn, Row row,
                        String keyColumn, String resource, int ttl, double score) {
         Object fieldObj = row.getAs(keyColumn);
         if (fieldObj == null) {
@@ -101,18 +99,12 @@ public class RedisWrites {
                             RedisModelCommand.resolveExpireKey(model, resource, field), ttl));
                 }
                 break;
-            case TRANSACTION:
-                RedisModelCommand.executeAsync(model, conn.async(), resource, field, jsonValue, score);
-                if (ttl > 0) {
-                    conn.async().expire(RedisModelCommand.resolveExpireKey(model, resource, field), ttl);
-                }
-                break;
             default:
                 break;
         }
     }
 
-    public void flush(StatefulRedisConnection<String, String> conn) {
+    public void flush(StatefulRedisClusterConnection<String, String> conn) {
         switch (mode) {
             case PIPELINE:
                 conn.flushCommands();
@@ -126,9 +118,6 @@ public class RedisWrites {
                         log.warn("异步写入第 {} 条失败: {}", i, e.getMessage());
                     }
                 }
-                break;
-            case TRANSACTION:
-                conn.async().exec();
                 break;
             default:
                 break;
