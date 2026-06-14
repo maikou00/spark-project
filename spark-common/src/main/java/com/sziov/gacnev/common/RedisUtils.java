@@ -7,6 +7,7 @@ import com.sziov.gacnev.spark.SparkParameterTool;
 import io.lettuce.core.KeyScanCursor;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.cluster.RedisClusterClient;
 import io.lettuce.core.ScanArgs;
 import io.lettuce.core.ScanCursor;
 import io.lettuce.core.api.StatefulRedisConnection;
@@ -29,7 +30,7 @@ import java.util.Properties;
 public final class RedisUtils {
 
     private static volatile GenericObjectPool<StatefulRedisConnection<String, String>> POOL;
-    private static volatile RedisClient CLIENT;
+    private static volatile Object CLIENT;
     private static final Object LOCK = new Object();
 
     private RedisUtils() {
@@ -84,7 +85,11 @@ public final class RedisUtils {
                     POOL = null;
                 }
                 if (CLIENT != null) {
-                    CLIENT.shutdown();
+                    if (CLIENT instanceof RedisClient) {
+                        ((RedisClient) CLIENT).shutdown();
+                    } else if (CLIENT instanceof RedisClusterClient) {
+                        ((RedisClusterClient) CLIENT).shutdown();
+                    }
                     CLIENT = null;
                 }
             }
@@ -156,14 +161,28 @@ public final class RedisUtils {
         config.setTestOnBorrow(Boolean.parseBoolean(SparkParameterTool.get(dsConfig,
                 ParamsKeyConstant.REDIS_POOL_TEST_ON_BORROW, ParamsDefaultValue.REDIS_POOL_TEST_ON_BORROW)));
 
+        boolean cluster = Boolean.parseBoolean(SparkParameterTool.get(dsConfig,
+                ParamsKeyConstant.DATASOURCE_REDIS_CLUSTER,
+                String.valueOf(ParamsDefaultValue.DATASOURCE_REDIS_CLUSTER)));
         RedisURI redisUri = buildRedisUri();
-        CLIENT = RedisClient.create(redisUri);
+
+        if (cluster) {
+            CLIENT = RedisClusterClient.create(redisUri);
+        } else {
+            CLIENT = RedisClient.create(redisUri);
+        }
+
         POOL = ConnectionPoolSupport.createGenericObjectPool(
                 () -> {
-                    StatefulRedisConnection<String, String> conn = CLIENT.connect();
+                    StatefulRedisConnection<String, String> conn;
+                    if (CLIENT instanceof RedisClusterClient) {
+                        conn = ((RedisClusterClient) CLIENT).connect();
+                    } else {
+                        conn = ((RedisClient) CLIENT).connect();
+                    }
                     conn.setAutoFlushCommands(true);
                     return conn;
                 }, config);
-        log.info("Redis 连接池初始化完成，maxTotal={}", config.getMaxTotal());
+        log.info("Redis 连接池初始化完成，cluster={}, maxTotal={}", cluster, config.getMaxTotal());
     }
 }

@@ -303,6 +303,7 @@ public final class ParamsDefaultValue {
     public static final String DATASOURCE_REDIS_PORT = "6379";
     /** Redis 默认数据库编号 */
     public static final String DATASOURCE_REDIS_DB = "0";
+    public static final boolean DATASOURCE_REDIS_CLUSTER = false;
     /** Redis 连接池默认最大连接数 */
     public static final String REDIS_POOL_MAX_TOTAL = "8";
     /** Redis 连接池默认最大空闲连接数 */

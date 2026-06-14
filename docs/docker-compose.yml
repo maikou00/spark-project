@@ -75,25 +75,84 @@ services:
       start_period: 30s
     restart: unless-stopped
 
-  redis:
+  redis-node1:
     image: redis:7-alpine
-    container_name: redis
-    hostname: redis
-    mem_limit: 256m
+    container_name: redis-node1
+    mem_limit: 128m
     ports:
       - "6379:6379"
-    volumes:
-      - redis-data:/data
+    command: redis-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --requirepass redis123 --masterauth redis123
     networks:
       doris-net:
         ipv4_address: 172.20.80.6
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-      start_period: 10s
-    restart: unless-stopped
+
+  redis-node2:
+    image: redis:7-alpine
+    container_name: redis-node2
+    mem_limit: 128m
+    command: redis-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --requirepass redis123 --masterauth redis123
+    networks:
+      doris-net:
+        ipv4_address: 172.20.80.7
+
+  redis-node3:
+    image: redis:7-alpine
+    container_name: redis-node3
+    mem_limit: 128m
+    command: redis-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --requirepass redis123 --masterauth redis123
+    networks:
+      doris-net:
+        ipv4_address: 172.20.80.8
+
+  redis-node4:
+    image: redis:7-alpine
+    container_name: redis-node4
+    mem_limit: 128m
+    command: redis-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --requirepass redis123 --masterauth redis123
+    networks:
+      doris-net:
+        ipv4_address: 172.20.80.9
+
+  redis-node5:
+    image: redis:7-alpine
+    container_name: redis-node5
+    mem_limit: 128m
+    command: redis-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --requirepass redis123 --masterauth redis123
+    networks:
+      doris-net:
+        ipv4_address: 172.20.80.10
+
+  redis-node6:
+    image: redis:7-alpine
+    container_name: redis-node6
+    mem_limit: 128m
+    command: redis-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --requirepass redis123 --masterauth redis123
+    networks:
+      doris-net:
+        ipv4_address: 172.20.80.11
+
+  redis-cluster-init:
+    image: redis:7-alpine
+    container_name: redis-cluster-init
+    mem_limit: 64m
+    depends_on:
+      - redis-node1
+      - redis-node2
+      - redis-node3
+      - redis-node4
+      - redis-node5
+      - redis-node6
+    entrypoint: |
+      sh -c '
+        echo "Waiting for nodes..."
+        sleep 10
+        echo "Creating cluster..."
+        echo "yes" | redis-cli -a redis123 --cluster create           172.20.80.6:6379 172.20.80.7:6379 172.20.80.8:6379           172.20.80.9:6379 172.20.80.10:6379 172.20.80.11:6379           --cluster-replicas 1
+        echo "Cluster created"
+      '
+    networks:
+      doris-net:
+        ipv4_address: 172.20.80.12
 
   clickhouse:
     image: clickhouse/clickhouse-server:24.3
@@ -129,7 +188,6 @@ volumes:
   mysql-data:
   clickhouse-data:
   clickhouse-log:
-  redis-data:
 
 networks:
   doris-net:
