@@ -37,7 +37,13 @@ public final class RedisUtils {
     }
 
     public static StatefulRedisClusterConnection<String, String> borrowConnection() {
-        if (POOL == null) {
+
+    /**
+     * 从连接池借用一个 Redis 集群连接，连接池不存在时自动初始化。
+     *
+     * @return Redis 集群连接
+     * @throws WarehouseException 连接池耗尽或初始化失败
+     */        if (POOL == null) {
             synchronized (LOCK) {
                 if (POOL == null) {
                     initPool();
@@ -51,6 +57,12 @@ public final class RedisUtils {
         }
     }
 
+
+    /**
+     * 归还连接到池中，自动恢复 autoFlush 状态。
+     *
+     * @param conn 待归还的连接
+     */
     public static void returnConnection(StatefulRedisClusterConnection<String, String> conn) {
         if (conn != null && POOL != null) {
             conn.setAutoFlushCommands(true);
@@ -58,6 +70,10 @@ public final class RedisUtils {
         }
     }
 
+
+    /**
+     * 关闭连接池并释放客户端资源，幂等操作。
+     */
     public static void closePool() {
         if (POOL != null) {
             synchronized (LOCK) {

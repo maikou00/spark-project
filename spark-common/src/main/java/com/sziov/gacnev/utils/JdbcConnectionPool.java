@@ -46,7 +46,8 @@ public final class JdbcConnectionPool {
             POOLS.forEach((key, pool) -> {
                 try {
                     pool.close();
-                } catch (Exception ignored) {
+                } catch (Exception e) {
+            log.warn("无法通过反射获取 Spark executor cores，按 CPU 核数（上限 8）计算池大小", e);
                 }
             });
             POOLS.clear();
@@ -128,7 +129,8 @@ public final class JdbcConnectionPool {
                     return executorCores;
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.warn("无法通过反射获取 Spark executor cores，按 CPU 核数（上限 8）计算池大小", e);
         }
         return Math.min(Runtime.getRuntime().availableProcessors(), 8);
     }
