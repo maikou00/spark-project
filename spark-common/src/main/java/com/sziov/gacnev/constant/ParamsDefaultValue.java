@@ -315,8 +315,6 @@ public final class ParamsDefaultValue {
     public static final String REDIS_POOL_TEST_ON_BORROW = "true";
     /** Redis SCAN 默认转大规模路径的 key 数阈值 */
     public static final String REDIS_SCAN_THRESHOLD = "10000";
-    // Kafka
-    /** Kafka 默认 Bootstrap Servers */
     // MySQL
     /** MySQL 默认 JDBC 连接地址 */
     public static final String DATASOURCE_MYSQL_URL = "jdbc:mysql://localhost:3306/spark_test?rewriteBatchedStatements=true\u0026useSSL=false\u0026allowPublicKeyRetrieval=true";
@@ -363,9 +361,6 @@ public final class ParamsDefaultValue {
     /** Doris 默认 BE 读取超时（毫秒） */
     public static final int DATASOURCE_DORIS_REQUEST_READ_TIMEOUT_MS = 60000;
 
-    public static final String DATASOURCE_KAFKA_BOOTSTRAP_SERVERS = "localhost:9092";
-    /** Kafka 默认消费者组 ID */
-    public static final String DATASOURCE_KAFKA_GROUP_ID = "spark-datasource-group";
 
     // ==================== JDBC 连接池默认值 ====================
 

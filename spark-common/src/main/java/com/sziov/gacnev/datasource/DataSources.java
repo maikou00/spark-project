@@ -71,6 +71,10 @@ public final class DataSources {
         log.info("DataSources 配置已加载，共 {} 项", dsConfig.size());
     }
 
+    /**
+     * 确保配置已加载。首次调用非原子（多线程并发可能重复初始化），
+     * 但 {@link Properties} 覆盖幂等，不影响正确性。
+     */
     static void ensureInitialized() {
         if (dsConfig == null) {
             log.info("DataSources 未显式初始化，从 classpath:app.properties 加载");

@@ -384,11 +384,6 @@ public final class ParamsKeyConstant {
     public static final String DATASOURCE_DORIS_REQUEST_CONNECT_TIMEOUT_MS = "datasource.doris.request.connect.timeout.ms";
     /** Doris BE 读取超时（毫秒） */
     public static final String DATASOURCE_DORIS_REQUEST_READ_TIMEOUT_MS = "datasource.doris.request.read.timeout.ms";
-    // Kafka
-    /** Kafka Bootstrap Servers */
-    public static final String DATASOURCE_KAFKA_BOOTSTRAP_SERVERS = "datasource.kafka.bootstrap.servers";
-    /** Kafka 消费者组 ID */
-    public static final String DATASOURCE_KAFKA_GROUP_ID = "datasource.kafka.group.id";
     // ==================== JDBC 连接池配置 ====================
 
     /** 连接池最大连接数 */

@@ -167,6 +167,12 @@ public class ClickHouseSink implements DataSink<ClickHouseOption> {
         return sb.toString();
     }
 
+    /**
+     * Spark 类型 → ClickHouse 类型映射。
+     * <p><b>注意：</b>{@code timestamp} 映射为 {@code DateTime}（秒级精度），
+     * {@code decimal} 统一映射为 {@code Decimal(38,18)}（忽略原始 precision/scale）。
+     * 如需保留完整精度，请手动建表后使用 Append 模式写入。</p>
+     */
     private static String toClickHouseType(DataType sparkType) {
         String typeName = sparkType.typeName();
         switch (typeName) {

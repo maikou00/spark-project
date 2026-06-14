@@ -5,6 +5,7 @@ services:
     image: apache/doris:fe-4.1.1
     container_name: doris-fe
     hostname: doris-fe
+    mem_limit: 2g
     ports:
       - "8030:8030"
       - "9030:9030"
@@ -14,9 +15,11 @@ services:
       - FE_MASTER_PORT=9010
       - FE_CURRENT_IP=172.20.80.2
       - FE_CURRENT_PORT=9010
+      - JAVA_OPTS=-Xmx768m -Xms256m -XX:MaxDirectMemorySize=64m -XX:MaxMetaspaceSize=96m -XX:ReservedCodeCacheSize=48m
     volumes:
       - doris-fe-meta:/opt/apache-doris/fe/doris-meta
       - doris-fe-log:/opt/apache-doris/fe/log
+      - ./fe.conf:/opt/apache-doris/fe/conf/fe.conf
     networks:
       doris-net:
         ipv4_address: 172.20.80.2
@@ -25,12 +28,14 @@ services:
       interval: 10s
       timeout: 5s
       retries: 30
-      start_period: 30s
+      start_period: 60s
+    restart: unless-stopped
 
   doris-be:
     image: apache/doris:be-4.1.1
     container_name: doris-be
     hostname: doris-be
+    mem_limit: 2g
     ports:
       - "8040:8040"
     environment:
@@ -46,6 +51,7 @@ services:
     depends_on:
       doris-fe:
         condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   doris-fe-meta:

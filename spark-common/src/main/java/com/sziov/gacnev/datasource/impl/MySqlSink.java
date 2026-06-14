@@ -237,7 +237,4 @@ public class MySqlSink implements DataSink<MySqlOption> {
         }
     }
 
-    private static boolean isTableNotExists(java.sql.SQLException e) {
-        return "42S02".equals(e.getSQLState());
-    }
 }

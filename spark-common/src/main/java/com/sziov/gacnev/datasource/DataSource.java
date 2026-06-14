@@ -16,7 +16,4 @@ public interface DataSource<O extends DataSourceOption<O>> {
 
     Dataset<Row> read(SparkSession spark, O options);
 
-    default Dataset<Row> readStream(SparkSession spark, O options) {
-        throw new UnsupportedOperationException("流式读取不支持");
-    }
 }

@@ -43,6 +43,4 @@ public class FileOption implements DataSourceOption<FileOption> {
     /** 写入前重分区数 */
     private int repartitionNum;
 
-    /** 批量写入大小 */
-    private int batchSize;
 }
