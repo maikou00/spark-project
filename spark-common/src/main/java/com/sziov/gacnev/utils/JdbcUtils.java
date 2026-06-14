@@ -30,8 +30,13 @@ public final class JdbcUtils {
      * @return 数据库连接
      */
     public static Connection getConnection(String url, String username, String password) {
+        java.util.Properties props = new java.util.Properties();
+        props.setProperty("user", username);
+        props.setProperty("password", password);
+        props.setProperty("connectTimeout", "5000");
+        props.setProperty("socketTimeout", "30000");
         try {
-            return DriverManager.getConnection(url, username, password);
+            return DriverManager.getConnection(url, props);
         } catch (SQLException e) {
             log.error("Failed to get database connection, url: {}", url, e);
             throw new RuntimeException("Failed to get database connection", e);
@@ -50,7 +55,12 @@ public final class JdbcUtils {
     public static Connection getConnection(String driverClass, String url, String username, String password) {
         try {
             Class.forName(driverClass);
-            return DriverManager.getConnection(url, username, password);
+            java.util.Properties props = new java.util.Properties();
+            props.setProperty("user", username);
+            props.setProperty("password", password);
+            props.setProperty("connectTimeout", "5000");
+            props.setProperty("socketTimeout", "30000");
+            return DriverManager.getConnection(url, props);
         } catch (ClassNotFoundException e) {
             log.error("Failed to load driver class: {}", driverClass, e);
             throw new RuntimeException("Failed to load driver class: " + driverClass, e);
