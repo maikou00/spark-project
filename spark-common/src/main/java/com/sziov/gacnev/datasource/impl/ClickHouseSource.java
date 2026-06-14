@@ -1,6 +1,7 @@
 package com.sziov.gacnev.datasource.impl;
 
 import com.sziov.gacnev.common.WarehouseException;
+import com.sziov.gacnev.constant.ParamsDefaultValue;
 import com.sziov.gacnev.constant.ParamsKeyConstant;
 import com.sziov.gacnev.datasource.DataSink;
 import com.sziov.gacnev.datasource.DataSource;
@@ -18,6 +19,7 @@ import java.util.Properties;
 
 /**
  * ClickHouse 数据读取。
+ * 一致性语义：<b>至少一次</b>（Spark JDBC 读，无事务保证）。
  *
  * @author maikou
  * @since 2026-06-09
@@ -34,7 +36,6 @@ public class ClickHouseSource implements DataSource<ClickHouseOption>, DataSourc
     @Override
     public DataSink<?> createSink() { return new ClickHouseSink(); }
 
-    
     @Override
     public Dataset<Row> read(SparkSession spark, ClickHouseOption options) {
         Properties dsConfig = DataSources.getDsConfig();
@@ -49,13 +50,25 @@ public class ClickHouseSource implements DataSource<ClickHouseOption>, DataSourc
         jdbcProps.setProperty("user", username);
         jdbcProps.setProperty("password", password);
 
+        // JDBC 超时配置：防止网络抖动导致 Task 无限卡死
+        int connectTimeout = SparkParameterTool.getInt(dsConfig,
+                ParamsKeyConstant.DATASOURCE_JDBC_CONNECTION_TIMEOUT,
+                ParamsDefaultValue.DATASOURCE_JDBC_CONNECTION_TIMEOUT);
+        int socketTimeout = SparkParameterTool.getInt(dsConfig,
+                ParamsKeyConstant.DATASOURCE_JDBC_SOCKET_TIMEOUT,
+                ParamsDefaultValue.DATASOURCE_JDBC_SOCKET_TIMEOUT);
+        int queryTimeout = SparkParameterTool.getInt(dsConfig,
+                ParamsKeyConstant.DATASOURCE_JDBC_QUERY_TIMEOUT,
+                ParamsDefaultValue.DATASOURCE_JDBC_QUERY_TIMEOUT);
+        if (connectTimeout > 0) jdbcProps.setProperty("connectTimeout", String.valueOf(connectTimeout));
+        if (socketTimeout > 0) jdbcProps.setProperty("socketTimeout", String.valueOf(socketTimeout));
+
         String tableOrQuery = options.getQuery() != null && !options.getQuery().isEmpty()
                 ? "(" + options.getQuery() + ") t"
                 : options.getResource();
 
-        
-    log.info("从 ClickHouse 读取数据，表: {}", options.getResource());
-    return spark.read().jdbc(jdbcUrl, tableOrQuery, jdbcProps);
-        
+        log.info("从 ClickHouse 读取数据，表: {}", options.getResource());
+        return spark.read().option("queryTimeout", queryTimeout)
+                .jdbc(jdbcUrl, tableOrQuery, jdbcProps);
     }
 }

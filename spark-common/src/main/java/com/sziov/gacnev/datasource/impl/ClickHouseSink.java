@@ -13,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import org.apache.spark.sql.types.DataType;
+import org.apache.spark.sql.types.StructType;
 
 import com.sziov.gacnev.common.JdbcConnectionPool;
 import java.sql.Connection;
@@ -22,6 +24,7 @@ import java.util.Properties;
 /**
  * ClickHouse 数据写入。
  *
+ * <p>一致性语义：Append 写入为 <b>至少一次</b>，Overwrite（RENAME TABLE 原子切换）为 <b>精确一次</b>（同 JVM 内）。</p>
  * <p>ClickHouse 为 OLAP 列存引擎，仅支持 Append/Overwrite/Execute。
  * 如需去重，请使用 ReplacingMergeTree 引擎配合纯 INSERT 写入。</p>
  *
@@ -51,6 +54,7 @@ public class ClickHouseSink implements DataSink<ClickHouseOption> {
         if (SaveMode.Overwrite.equals(mode)) {
             overwriteAtomic(jdbcUrl, jdbcProps, df, resource);
         } else {
+            ensureTable(jdbcUrl, jdbcProps, resource, df);
             df.write().mode("append").jdbc(jdbcUrl, resource, jdbcProps);
         }
     }
@@ -86,6 +90,8 @@ public class ClickHouseSink implements DataSink<ClickHouseOption> {
 
     /**
      * Overwrite 安全写入：先写临时表，再通过 RENAME TABLE 原子切换。
+     * <p><b>注意：</b>tableExists() 与 RENAME TABLE 之间存在 TOCTOU 竞态窗口，
+     * 生产环境须通过调度层保证同一表同时仅一个 Overwrite Job 运行。</p>
      */
     private void overwriteAtomic(String jdbcUrl, Properties jdbcProps,
                                   Dataset<Row> df, String resource) {
@@ -103,6 +109,8 @@ public class ClickHouseSink implements DataSink<ClickHouseOption> {
             throw new WarehouseException("Overwrite 清理临时表失败", e);
         }
 
+        // ClickHouse 24.x 要求显式指定 ENGINE + ORDER BY，Spark JDBC 自动建表不满足
+        ensureTable(jdbcUrl, jdbcProps, tmpTable, df);
         df.write().mode("append").jdbc(jdbcUrl, tmpTable, jdbcProps);
         log.info("Overwrite 临时表写入完成: {} → {}", tmpTable, resource);
 
@@ -128,6 +136,55 @@ public class ClickHouseSink implements DataSink<ClickHouseOption> {
         }
     }
 
+    /**
+     * 确保目标表存在，不存在则按 DataFrame Schema 自动创建。
+     * ClickHouse 24.x 要求 MergeTree 必须指定 ORDER BY，此处使用 {@code tuple()} 作为默认排序键。
+     */
+    private void ensureTable(String jdbcUrl, Properties jdbcProps, String table, Dataset<Row> df) {
+        try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps)) {
+            if (tableExists(conn, table)) {
+                return;
+            }
+            String ddl = buildCreateTableDDL(table, df.schema());
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute(ddl);
+                log.info("ClickHouse 自动建表: {}", ddl);
+            }
+        } catch (java.sql.SQLException e) {
+            log.error("ClickHouse 建表失败: {}", table, e);
+            throw new WarehouseException("ClickHouse 建表失败: " + table, e);
+        }
+    }
+
+    private String buildCreateTableDDL(String table, StructType schema) {
+        StringBuilder sb = new StringBuilder("CREATE TABLE IF NOT EXISTS ").append(table).append(" (");
+        String[] fields = schema.fieldNames();
+        for (int i = 0; i < fields.length; i++) {
+            if (i > 0) sb.append(", ");
+            sb.append(fields[i]).append(" ").append(toClickHouseType(schema.apply(i).dataType()));
+        }
+        sb.append(") ENGINE = MergeTree() ORDER BY tuple()");
+        return sb.toString();
+    }
+
+    private static String toClickHouseType(DataType sparkType) {
+        String typeName = sparkType.typeName();
+        switch (typeName) {
+            case "integer":   return "Int32";
+            case "long":      return "Int64";
+            case "float":     return "Float32";
+            case "double":    return "Float64";
+            case "string":    return "String";
+            case "boolean":   return "UInt8";
+            case "short":     return "Int16";
+            case "byte":      return "Int8";
+            case "date":      return "Date";
+            case "timestamp": return "DateTime";
+            case "decimal":   return "Decimal(38,18)";
+            default:          return "String";
+        }
+    }
+
     private static boolean tableExists(Connection conn, String table) {
         try (Statement stmt = conn.createStatement()) {
             stmt.execute("SELECT 1 FROM " + table + " WHERE 1=0");
@@ -135,10 +192,5 @@ public class ClickHouseSink implements DataSink<ClickHouseOption> {
         } catch (java.sql.SQLException e) {
             return false;
         }
-    }
-
-    private static boolean isTableNotExists(java.sql.SQLException e) {
-        String state = e.getSQLState();
-        return "42S02".equals(state) || "60".equals(state);
     }
 }

@@ -101,4 +101,19 @@ public class DataSourceApi<O extends DataSourceOption<O>> {
         DataSink<?> sink = DataSources.getSink(type);
         ((DataSink<O>) sink).execute(option);
     }
+
+    /**
+     * 流式写入数据（Structured Streaming）。
+     * 仅支持已实现 writeStream 的数据源（如 FileSink），不支持的数据源会抛 UnsupportedOperationException。
+     *
+     * @param df       Dataset
+     * @param resource 资源标识
+     */
+    @SuppressWarnings("unchecked")
+    public void writeStream(Dataset<Row> df, String resource) {
+        DataSources.ensureInitialized();
+        option.setResource(resource);
+        DataSink<?> sink = DataSources.getSink(type);
+        ((DataSink<O>) sink).writeStream(df, option);
+    }
 }

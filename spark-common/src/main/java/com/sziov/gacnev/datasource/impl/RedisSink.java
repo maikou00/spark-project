@@ -13,7 +13,8 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
 /**
- * Redis 数据写入，通过 {@link com.sziov.gacnev.datasource.redis.RedisWrites} 支持 pipeline/lua/transaction/direct/async_callback 五种写入模式。
+ * Redis 数据写入
+ * <p>一致性语义：PIPELINE/DIRECT/LUA 为 <b>至少一次</b>，TRANSACTION 为 <b>精确一次</b>（同分区内）。</p>，通过 {@link com.sziov.gacnev.datasource.redis.RedisWrites} 支持 pipeline/lua/transaction/direct/async_callback 五种写入模式。
  *
  * @author maikou
  * @since 2026-06-10

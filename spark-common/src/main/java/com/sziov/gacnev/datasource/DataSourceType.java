@@ -10,6 +10,9 @@ public enum DataSourceType {
     HIVE,
     CSV, JSON, PARQUET, ORC, TEXT,
     CLICKHOUSE, DORIS,
-    ELASTICSEARCH, MONGODB, MYSQL, REDIS,
+    /** TODO: 待实现 */
+    ELASTICSEARCH, /** TODO: 待实现 */
+    MONGODB, MYSQL, REDIS,
+    /** TODO: 待实现 */
     KAFKA
 }

@@ -10,6 +10,7 @@ import org.apache.spark.sql.SparkSession;
 
 /**
  * Hive 数据写入。
+ * <p>一致性语义：insertInto 为 <b>至少一次</b>。</p>
  *
  * @author maikou
  * @since 2026-06-09

@@ -28,6 +28,8 @@ import java.util.Set;
 
 /**
  * MySQL 数据写入。
+ * <p>一致性语义：Append 写入为 <b>至少一次</b>，Overwrite（RENAME TABLE 原子切换）为 <b>精确一次</b>（同 JVM 内），
+ * Upsert（ON DUPLICATE KEY UPDATE）为 <b>至少一次</b>（幂等）。</p>
  *
  * @author maikou
  * @since 2026-06-11

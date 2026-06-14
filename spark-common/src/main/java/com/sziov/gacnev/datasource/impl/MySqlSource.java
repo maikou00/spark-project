@@ -20,6 +20,7 @@ import java.util.Properties;
 
 /**
  * MySQL 数据读取。
+ * 一致性语义：<b>至少一次</b>（Spark JDBC 读，无事务保证）。
  *
  * @author maikou
  * @since 2026-06-11
@@ -59,24 +60,39 @@ public class MySqlSource implements DataSource<MySqlOption>, DataSourceProvider 
         jdbcProps.setProperty("password", password);
         jdbcProps.setProperty("driver", driver);
 
+        // JDBC 超时配置：防止网络抖动导致 Task 无限卡死
+        int connectTimeout = SparkParameterTool.getInt(dsConfig,
+                ParamsKeyConstant.DATASOURCE_JDBC_CONNECTION_TIMEOUT,
+                ParamsDefaultValue.DATASOURCE_JDBC_CONNECTION_TIMEOUT);
+        int socketTimeout = SparkParameterTool.getInt(dsConfig,
+                ParamsKeyConstant.DATASOURCE_JDBC_SOCKET_TIMEOUT,
+                ParamsDefaultValue.DATASOURCE_JDBC_SOCKET_TIMEOUT);
+        int queryTimeout = SparkParameterTool.getInt(dsConfig,
+                ParamsKeyConstant.DATASOURCE_JDBC_QUERY_TIMEOUT,
+                ParamsDefaultValue.DATASOURCE_JDBC_QUERY_TIMEOUT);
+        if (connectTimeout > 0) jdbcProps.setProperty("connectTimeout", String.valueOf(connectTimeout));
+        if (socketTimeout > 0) jdbcProps.setProperty("socketTimeout", String.valueOf(socketTimeout));
+
         String tableOrQuery = options.getQuery() != null && !options.getQuery().isEmpty()
                 ? "(" + options.getQuery() + ") t"
                 : options.getResource();
 
-        
-    log.info("从 MySQL 读取数据，表: {}", options.getResource());
-    List<String> predicates = options.getPredicates();
-    if (predicates != null && !predicates.isEmpty()) {
-        return spark.read().jdbc(jdbcUrl, tableOrQuery, predicates.toArray(new String[0]), jdbcProps);
-    }
-    String partitionColumn = options.getPartitionColumn();
-    if (partitionColumn != null && !partitionColumn.isEmpty()) {
-        long lower = options.getLowerBound() != null ? options.getLowerBound() : 0L;
-        long upper = options.getUpperBound() != null ? options.getUpperBound() : Long.MAX_VALUE;
-        int parts = options.getNumPartitions() != null ? options.getNumPartitions() : ParamsDefaultValue.DATASOURCE_MYSQL_NUM_PARTITIONS;
-        return spark.read().jdbc(jdbcUrl, tableOrQuery, partitionColumn, lower, upper, parts, jdbcProps);
-    }
-    return spark.read().jdbc(jdbcUrl, tableOrQuery, jdbcProps);
-        
+        log.info("从 MySQL 读取数据，表: {}", options.getResource());
+        List<String> predicates = options.getPredicates();
+        if (predicates != null && !predicates.isEmpty()) {
+            return spark.read().option("queryTimeout", queryTimeout)
+                    .jdbc(jdbcUrl, tableOrQuery, predicates.toArray(new String[0]), jdbcProps);
+        }
+        String partitionColumn = options.getPartitionColumn();
+        if (partitionColumn != null && !partitionColumn.isEmpty()) {
+            long lower = options.getLowerBound() != null ? options.getLowerBound() : 0L;
+            long upper = options.getUpperBound() != null ? options.getUpperBound() : Long.MAX_VALUE;
+            int parts = options.getNumPartitions() != null ? options.getNumPartitions()
+                    : ParamsDefaultValue.DATASOURCE_MYSQL_NUM_PARTITIONS;
+            return spark.read().option("queryTimeout", queryTimeout)
+                    .jdbc(jdbcUrl, tableOrQuery, partitionColumn, lower, upper, parts, jdbcProps);
+        }
+        return spark.read().option("queryTimeout", queryTimeout)
+                .jdbc(jdbcUrl, tableOrQuery, jdbcProps);
     }
 }

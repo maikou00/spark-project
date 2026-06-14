@@ -424,13 +424,37 @@ public final class SparkEnvUtils {
     }
 
     private static void setGlobalJobParameters(SparkSession sparkSession, Properties properties) {
-        sparkSession.sparkContext().setLocalProperties(properties);
+        sparkSession.sparkContext().setLocalProperties(filterSensitiveProperties(properties));
     }
 
     private static void setGlobalJobParameters(JavaSparkContext jsc, Properties properties) {
-        jsc.sc().setLocalProperties(properties);
+        jsc.sc().setLocalProperties(filterSensitiveProperties(properties));
     }
 
+    /**
+     * 过滤敏感配置项，返回不含密码/密钥等信息的 Properties 副本。
+     * 仅用于注入 Spark local properties（会暴露在 Spark UI 中）。
+     */
+    private static Properties filterSensitiveProperties(Properties source) {
+        Properties safe = new Properties();
+        for (String key : source.stringPropertyNames()) {
+            if (!isSensitiveKey(key)) {
+                safe.setProperty(key, source.getProperty(key));
+            }
+        }
+        return safe;
+    }
+
+    private static boolean isSensitiveKey(String key) {
+        if (key == null) {
+            return false;
+        }
+        String lower = key.toLowerCase();
+        return lower.contains("password") || lower.contains("secret")
+                || lower.contains("token") || lower.contains("credential")
+                || lower.contains("auth") || lower.contains("accesskey")
+                || lower.contains("privatekey");
+    }
     /**
      * 日志打印生效的配置（对敏感信息脱敏）。
      */

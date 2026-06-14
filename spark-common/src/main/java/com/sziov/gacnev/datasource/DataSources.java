@@ -179,16 +179,16 @@ public final class DataSources {
     // ==================== 内置数据源静态注册 ====================
 
     private static void initBuiltinSources() {
-        SOURCES.put(DataSourceType.CSV, new FileSource(FORMAT_CSV, Collections.emptyMap(), null, DEFAULT_MAX_RETRIES));
-        SINKS.put(DataSourceType.CSV, new FileSink(FORMAT_CSV, Collections.emptyMap(), null, DEFAULT_MAX_RETRIES));
-        SOURCES.put(DataSourceType.JSON, new FileSource(FORMAT_JSON, Collections.emptyMap(), null, DEFAULT_MAX_RETRIES));
-        SINKS.put(DataSourceType.JSON, new FileSink(FORMAT_JSON, Collections.emptyMap(), null, DEFAULT_MAX_RETRIES));
-        SOURCES.put(DataSourceType.PARQUET, new FileSource(FORMAT_PARQUET, Collections.emptyMap(), null, DEFAULT_MAX_RETRIES));
-        SINKS.put(DataSourceType.PARQUET, new FileSink(FORMAT_PARQUET, Collections.emptyMap(), null, DEFAULT_MAX_RETRIES));
-        SOURCES.put(DataSourceType.ORC, new FileSource(FORMAT_ORC, Collections.emptyMap(), null, DEFAULT_MAX_RETRIES));
-        SINKS.put(DataSourceType.ORC, new FileSink(FORMAT_ORC, Collections.emptyMap(), null, DEFAULT_MAX_RETRIES));
-        SOURCES.put(DataSourceType.TEXT, new FileSource(FORMAT_TEXT, Collections.emptyMap(), null, DEFAULT_MAX_RETRIES));
-        SINKS.put(DataSourceType.TEXT, new FileSink(FORMAT_TEXT, Collections.emptyMap(), null, DEFAULT_MAX_RETRIES));
+        SOURCES.put(DataSourceType.CSV, new FileSource(FORMAT_CSV, Collections.emptyMap(), DEFAULT_MAX_RETRIES));
+        SINKS.put(DataSourceType.CSV, new FileSink(FORMAT_CSV, Collections.emptyMap(), DEFAULT_MAX_RETRIES));
+        SOURCES.put(DataSourceType.JSON, new FileSource(FORMAT_JSON, Collections.emptyMap(), DEFAULT_MAX_RETRIES));
+        SINKS.put(DataSourceType.JSON, new FileSink(FORMAT_JSON, Collections.emptyMap(), DEFAULT_MAX_RETRIES));
+        SOURCES.put(DataSourceType.PARQUET, new FileSource(FORMAT_PARQUET, Collections.emptyMap(), DEFAULT_MAX_RETRIES));
+        SINKS.put(DataSourceType.PARQUET, new FileSink(FORMAT_PARQUET, Collections.emptyMap(), DEFAULT_MAX_RETRIES));
+        SOURCES.put(DataSourceType.ORC, new FileSource(FORMAT_ORC, Collections.emptyMap(), DEFAULT_MAX_RETRIES));
+        SINKS.put(DataSourceType.ORC, new FileSink(FORMAT_ORC, Collections.emptyMap(), DEFAULT_MAX_RETRIES));
+        SOURCES.put(DataSourceType.TEXT, new FileSource(FORMAT_TEXT, Collections.emptyMap(), DEFAULT_MAX_RETRIES));
+        SINKS.put(DataSourceType.TEXT, new FileSink(FORMAT_TEXT, Collections.emptyMap(), DEFAULT_MAX_RETRIES));
     }
 
     // ==================== SPI 自动发现 ====================

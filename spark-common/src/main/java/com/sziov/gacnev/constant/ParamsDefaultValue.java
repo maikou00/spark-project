@@ -379,4 +379,12 @@ public final class ParamsDefaultValue {
     public static final int DATASOURCE_POOL_MAX_LIFETIME = 1800000;
     /** 空闲超时默认（毫秒） */
     public static final int DATASOURCE_POOL_IDLE_TIMEOUT = 600000;
+    // ==================== JDBC 超时默认值 ====================
+
+    /** JDBC 连接超时默认（毫秒） */
+    public static final int DATASOURCE_JDBC_CONNECTION_TIMEOUT = 30000;
+    /** JDBC Socket 超时默认（毫秒） */
+    public static final int DATASOURCE_JDBC_SOCKET_TIMEOUT = 60000;
+    /** JDBC 查询超时默认（秒） */
+    public static final int DATASOURCE_JDBC_QUERY_TIMEOUT = 0;
 }

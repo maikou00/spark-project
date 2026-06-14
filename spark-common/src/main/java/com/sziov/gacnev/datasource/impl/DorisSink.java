@@ -23,6 +23,7 @@ import java.util.Properties;
 
 /**
  * Doris 数据写入，通过 Spark-Doris-Connector Stream Load 批量导入。
+ * <p>一致性语义：Stream Load 为 <b>至少一次</b>（通过 label 去重可实现幂等，配置 2PC 可提升一致性）。</p>
  *
  * @author maikou
  * @since 2026-06-12

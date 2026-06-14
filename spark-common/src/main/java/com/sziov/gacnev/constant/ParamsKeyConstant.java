@@ -401,4 +401,12 @@ public final class ParamsKeyConstant {
     public static final String DATASOURCE_POOL_MAX_LIFETIME = "datasource.pool.maxLifetime";
     /** 空闲超时（毫秒） */
     public static final String DATASOURCE_POOL_IDLE_TIMEOUT = "datasource.pool.idleTimeout";
+    // ==================== JDBC 超时配置 ====================
+
+    /** JDBC 连接超时（毫秒），建立 TCP 连接的最长等待时间 */
+    public static final String DATASOURCE_JDBC_CONNECTION_TIMEOUT = "datasource.jdbc.connectionTimeout";
+    /** JDBC Socket 超时（毫秒），已建立连接上等待数据的超时 */
+    public static final String DATASOURCE_JDBC_SOCKET_TIMEOUT = "datasource.jdbc.socketTimeout";
+    /** JDBC 查询超时（秒），单条查询执行的最长时间 */
+    public static final String DATASOURCE_JDBC_QUERY_TIMEOUT = "datasource.jdbc.queryTimeout";
 }
