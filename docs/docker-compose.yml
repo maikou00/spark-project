@@ -104,33 +104,6 @@ services:
       doris-net:
         ipv4_address: 172.20.80.8
 
-  redis-node4:
-    image: redis:7-alpine
-    container_name: redis-node4
-    mem_limit: 128m
-    command: redis-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --requirepass redis123 --masterauth redis123
-    networks:
-      doris-net:
-        ipv4_address: 172.20.80.9
-
-  redis-node5:
-    image: redis:7-alpine
-    container_name: redis-node5
-    mem_limit: 128m
-    command: redis-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --requirepass redis123 --masterauth redis123
-    networks:
-      doris-net:
-        ipv4_address: 172.20.80.10
-
-  redis-node6:
-    image: redis:7-alpine
-    container_name: redis-node6
-    mem_limit: 128m
-    command: redis-server --port 6379 --cluster-enabled yes --cluster-config-file nodes.conf --cluster-node-timeout 5000 --appendonly yes --requirepass redis123 --masterauth redis123
-    networks:
-      doris-net:
-        ipv4_address: 172.20.80.11
-
   redis-cluster-init:
     image: redis:7-alpine
     container_name: redis-cluster-init
@@ -139,20 +112,17 @@ services:
       - redis-node1
       - redis-node2
       - redis-node3
-      - redis-node4
-      - redis-node5
-      - redis-node6
     entrypoint: |
       sh -c '
         echo "Waiting for nodes..."
-        sleep 10
-        echo "Creating cluster..."
-        echo "yes" | redis-cli -a redis123 --cluster create           172.20.80.6:6379 172.20.80.7:6379 172.20.80.8:6379           172.20.80.9:6379 172.20.80.10:6379 172.20.80.11:6379           --cluster-replicas 1
+        sleep 8
+        echo "Creating cluster (3 masters)..."
+        echo "yes" | redis-cli -a redis123 --cluster create           172.20.80.6:6379 172.20.80.7:6379 172.20.80.8:6379           --cluster-replicas 0
         echo "Cluster created"
       '
     networks:
       doris-net:
-        ipv4_address: 172.20.80.12
+        ipv4_address: 172.20.80.9
 
   clickhouse:
     image: clickhouse/clickhouse-server:24.3
