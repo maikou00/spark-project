@@ -281,4 +281,36 @@ public final class EtlUtils {
         }
         return result;
     }
+
+    // ==================== 分区操作 ====================
+
+    public static Dataset<Row> repartition(Dataset<Row> df, int numPartitions) {
+        if (numPartitions <= 0) throw new IllegalArgumentException("分区数必须大于0");
+        Dataset<Row> result = df.repartition(numPartitions);
+        log.info("DataFrame 重分区完成，分区数: {}", numPartitions);
+        return result;
+    }
+
+    public static Dataset<Row> repartition(Dataset<Row> df, int numPartitions, String... columnNames) {
+        if (numPartitions <= 0) throw new IllegalArgumentException("分区数必须大于0");
+        if (columnNames == null || columnNames.length == 0) throw new IllegalArgumentException("分区列不能为空");
+        org.apache.spark.sql.Column[] cols = new org.apache.spark.sql.Column[columnNames.length];
+        for (int i = 0; i < columnNames.length; i++) cols[i] = org.apache.spark.sql.functions.col(columnNames[i]);
+        Dataset<Row> result = df.repartition(numPartitions, cols);
+        log.info("DataFrame 按列重分区完成，分区数: {}，列: {}", numPartitions, java.util.Arrays.toString(columnNames));
+        return result;
+    }
+
+    public static Dataset<Row> coalesce(Dataset<Row> df, int numPartitions) {
+        if (numPartitions <= 0) throw new IllegalArgumentException("分区数必须大于0");
+        Dataset<Row> result = df.coalesce(numPartitions);
+        log.info("DataFrame 合并分区完成，分区数: {}", numPartitions);
+        return result;
+    }
+
+
+    public static int getCurrentPartitionNum(Dataset<Row> df) {
+        return df.rdd().getNumPartitions();
+    }
+
 }

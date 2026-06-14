@@ -39,7 +39,7 @@ public final class JdbcUtils {
             return DriverManager.getConnection(url, props);
         } catch (SQLException e) {
             log.error("Failed to get database connection, url: {}", url, e);
-            throw new RuntimeException("Failed to get database connection", e);
+            throw new WarehouseException("Failed to get database connection", e);
         }
     }
 
@@ -63,10 +63,10 @@ public final class JdbcUtils {
             return DriverManager.getConnection(url, props);
         } catch (ClassNotFoundException e) {
             log.error("Failed to load driver class: {}", driverClass, e);
-            throw new RuntimeException("Failed to load driver class: " + driverClass, e);
+            throw new WarehouseException("Failed to load driver class: " + driverClass, e);
         } catch (SQLException e) {
             log.error("Failed to get database connection, url: {}", url, e);
-            throw new RuntimeException("Failed to get database connection", e);
+            throw new WarehouseException("Failed to get database connection", e);
         }
     }
 
@@ -153,7 +153,7 @@ public final class JdbcUtils {
             return results;
         } catch (SQLException e) {
             log.error("Failed to execute query: {}", sql, e);
-            throw new RuntimeException("Failed to execute query", e);
+            throw new WarehouseException("Failed to execute query", e);
         } finally {
             closeResultSet(resultSet);
             closeStatement(statement);
@@ -176,7 +176,7 @@ public final class JdbcUtils {
             return rows;
         } catch (SQLException e) {
             log.error("Failed to execute update: {}", sql, e);
-            throw new RuntimeException("Failed to execute update", e);
+            throw new WarehouseException("Failed to execute update", e);
         } finally {
             closeStatement(statement);
         }
@@ -201,7 +201,7 @@ public final class JdbcUtils {
             return rows;
         } catch (SQLException e) {
             log.error("Failed to execute batch", e);
-            throw new RuntimeException("Failed to execute batch", e);
+            throw new WarehouseException("Failed to execute batch", e);
         } finally {
             closeStatement(statement);
         }

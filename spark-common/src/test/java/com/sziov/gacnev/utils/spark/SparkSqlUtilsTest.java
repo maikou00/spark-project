@@ -64,13 +64,6 @@ class SparkSqlUtilsTest extends AbstractSparkTest {
     }
 
     @Test
-    @DisplayName("show_DataFrame_不抛异常")
-    void show_dataFrame_noException() {
-        Dataset<Row> df = SparkSqlUtils.executeQuery(spark, "SELECT 1 AS id");
-        SparkSqlUtils.show(df);
-    }
-
-    @Test
     @DisplayName("getTableSchema_有效表名_返回StructType")
     void getTableSchema_validTable_returnsSchema() {
         SparkSqlUtils.executeUpdate(spark, "CREATE TABLE IF NOT EXISTS t1 (id INT, name STRING) USING parquet");

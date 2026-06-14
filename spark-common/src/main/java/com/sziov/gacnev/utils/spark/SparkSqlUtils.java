@@ -18,7 +18,6 @@ import java.util.Objects;
 @Slf4j
 public final class SparkSqlUtils {
 
-    private static final int DEFAULT_SHOW_ROWS = 20;
 
     private SparkSqlUtils() {
         throw new UnsupportedOperationException("工具类不允许实例化");
@@ -246,23 +245,5 @@ public final class SparkSqlUtils {
         log.info("Execution plan: \n{}", plan);
     }
 
-    /**
-     * 显示DataFrame数据
-     *
-     * @param df    DataFrame
-     * @param numRows 显示行数
-     * @param truncate 是否截断
-     */
-    public static void show(Dataset<Row> df, int numRows, boolean truncate) {
-        df.show(numRows, truncate);
-    }
 
-    /**
-     * 显示DataFrame数据（默认20行，不截断）
-     *
-     * @param df DataFrame
-     */
-    public static void show(Dataset<Row> df) {
-        show(df, DEFAULT_SHOW_ROWS, false);
-    }
 }

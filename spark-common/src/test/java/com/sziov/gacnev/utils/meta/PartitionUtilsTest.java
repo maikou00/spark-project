@@ -1,4 +1,5 @@
 package com.sziov.gacnev.utils.meta;
+import com.sziov.gacnev.utils.etl.EtlUtils;
 
 import com.sziov.gacnev.AbstractSparkTest;
 import org.apache.spark.sql.Dataset;
@@ -25,7 +26,7 @@ class PartitionUtilsTest extends AbstractSparkTest {
     @DisplayName("repartition_指定分区数_返回重分区DataFrame")
     void repartition_specifiedPartitions_returnsRepartitionedDf() {
         Dataset<Row> df = spark.range(10).toDF();
-        Dataset<Row> repartitioned = PartitionUtils.repartition(df, 2);
+        Dataset<Row> repartitioned = EtlUtils.repartition(df, 2);
         assertThat(repartitioned.rdd().getNumPartitions()).isEqualTo(2);
     }
 
@@ -39,7 +40,7 @@ class PartitionUtilsTest extends AbstractSparkTest {
         Dataset<Row> df = spark.createDataFrame(java.util.Arrays.asList(
                 RowFactory.create(1, "A"), RowFactory.create(2, "B")
         ), schema);
-        Dataset<Row> repartitioned = PartitionUtils.repartition(df, 1, "dept");
+        Dataset<Row> repartitioned = EtlUtils.repartition(df, 1, "dept");
         assertThat(repartitioned).isNotNull();
     }
 
@@ -47,7 +48,7 @@ class PartitionUtilsTest extends AbstractSparkTest {
     @DisplayName("coalesce_减少分区_返回合并后DataFrame")
     void coalesce_reducePartitions_returnsCoalescedDf() {
         Dataset<Row> df = spark.range(10).toDF().repartition(4);
-        Dataset<Row> coalesced = PartitionUtils.coalesce(df, 1);
+        Dataset<Row> coalesced = EtlUtils.coalesce(df, 1);
         assertThat(coalesced.rdd().getNumPartitions()).isEqualTo(1);
     }
 
@@ -55,6 +56,6 @@ class PartitionUtilsTest extends AbstractSparkTest {
     @DisplayName("getCurrentPartitionNum_DataFrame_返回分区数")
     void getCurrentPartitionNum_dataFrame_returnsPartitionCount() {
         Dataset<Row> df = spark.range(10).toDF().repartition(3);
-        assertThat(PartitionUtils.getCurrentPartitionNum(df)).isEqualTo(3);
+        assertThat(EtlUtils.getCurrentPartitionNum(df)).isEqualTo(3);
     }
 }
