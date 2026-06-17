@@ -28,7 +28,6 @@ import java.util.Properties;
 @Slf4j
 public class DorisSource implements DataSource<DorisOption>, DataSourceProvider {
 
-    
     @Override
     public DataSourceType type() { return DataSourceType.DORIS; }
 
@@ -64,35 +63,33 @@ public class DorisSource implements DataSource<DorisOption>, DataSourceProvider 
                 ParamsKeyConstant.DATASOURCE_DORIS_REQUEST_READ_TIMEOUT_MS,
                 String.valueOf(ParamsDefaultValue.DATASOURCE_DORIS_REQUEST_READ_TIMEOUT_MS)));
 
-        
-    log.info("从 Doris 读取数据（Connector），表: {}", resource);
-    DataFrameReader reader = spark.read()
-            .format("doris")
-            .option("doris.fenodes", fenodes)
-            .option("doris.query.port", SparkParameterTool.get(dsConfig,
-                    ParamsKeyConstant.DATASOURCE_DORIS_QUERY_PORT,
-                    ParamsDefaultValue.DATASOURCE_DORIS_QUERY_PORT))
-            .option("doris.request.retries", String.valueOf(requestRetries))
-            .option("doris.request.connect.timeout.ms", String.valueOf(connectTimeout))
-            .option("doris.request.read.timeout.ms", String.valueOf(readTimeout))
-            .option("user", username)
-            .option("password", password == null ? "" : password);
+        log.info("从 Doris 读取数据（Connector），表: {}", resource);
+        DataFrameReader reader = spark.read()
+                .format("doris")
+                .option("doris.fenodes", fenodes)
+                .option("doris.query.port", SparkParameterTool.get(dsConfig,
+                        ParamsKeyConstant.DATASOURCE_DORIS_QUERY_PORT,
+                        ParamsDefaultValue.DATASOURCE_DORIS_QUERY_PORT))
+                .option("doris.request.retries", String.valueOf(requestRetries))
+                .option("doris.request.connect.timeout.ms", String.valueOf(connectTimeout))
+                .option("doris.request.read.timeout.ms", String.valueOf(readTimeout))
+                .option("user", username)
+                .option("password", password == null ? "" : password);
 
-    String tableIdentifier;
-    if (options.getQuery() != null && !options.getQuery().isEmpty()) {
-        tableIdentifier = options.getQuery();
-    } else {
-        tableIdentifier = resource;
-    }
-    reader = reader.option("doris.table.identifier", tableIdentifier);
+        String tableIdentifier;
+        if (options.getQuery() != null && !options.getQuery().isEmpty()) {
+            tableIdentifier = options.getQuery();
+        } else {
+            tableIdentifier = resource;
+        }
+        reader = reader.option("doris.table.identifier", tableIdentifier);
 
-    List<String> predicates = options.getPredicates();
-    if (predicates != null && !predicates.isEmpty()) {
-        reader = reader.option("doris.filter.query",
-                String.join(" and ", predicates));
-    }
+        List<String> predicates = options.getPredicates();
+        if (predicates != null && !predicates.isEmpty()) {
+            reader = reader.option("doris.filter.query",
+                    String.join(" and ", predicates));
+        }
 
-    return reader.load();
-        
+        return reader.load();
     }
 }

@@ -1,12 +1,12 @@
 package com.sziov.gacnev.datasource.impl;
 
-import com.sziov.gacnev.utils.WarehouseException;
-
 import com.sziov.gacnev.constant.ParamsDefaultValue;
 import com.sziov.gacnev.constant.ParamsKeyConstant;
 import com.sziov.gacnev.datasource.DataSink;
 import com.sziov.gacnev.datasource.DataSources;
 import com.sziov.gacnev.datasource.option.MySqlOption;
+import com.sziov.gacnev.utils.JdbcConnectionPool;
+import com.sziov.gacnev.utils.WarehouseException;
 import com.sziov.gacnev.utils.spark.SparkParameterTool;
 
 import lombok.extern.slf4j.Slf4j;
@@ -17,8 +17,8 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 
 import java.sql.Connection;
-import com.sziov.gacnev.utils.JdbcConnectionPool;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -113,26 +113,27 @@ public class MySqlSink implements DataSink<MySqlOption> {
         String upsertSql = sql.toString();
         log.info("UPSERT MySQL，表: {}，keys: {}，SQL: {}", table, upsertKeys, upsertSql);
 
-        
-    df.foreachPartition((ForeachPartitionFunction<Row>) iterator -> {
-        try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps);
-             PreparedStatement ps = conn.prepareStatement(upsertSql)) {
-            int count = 0;
-            while (iterator.hasNext()) {
-                Row row = iterator.next();
-                for (int i = 0; i < columns.length; i++) {
-                    ps.setObject(i + 1, row.get(i));
+        df.foreachPartition((ForeachPartitionFunction<Row>) iterator -> {
+            try (Connection conn = JdbcConnectionPool.getConnection(jdbcUrl, jdbcProps);
+                 PreparedStatement ps = conn.prepareStatement(upsertSql)) {
+                int count = 0;
+                while (iterator.hasNext()) {
+                    Row row = iterator.next();
+                    for (int i = 0; i < columns.length; i++) {
+                        ps.setObject(i + 1, row.get(i));
+                    }
+                    ps.addBatch();
+                    count++;
+                    if (count % batchSize == 0) {
+                        ps.executeBatch();
+                    }
                 }
-                ps.addBatch();
-                count++;
-                if (count % batchSize == 0) {
-                    ps.executeBatch();
-                }
+                ps.executeBatch();
+            } catch (SQLException e) {
+                log.error("UPSERT 分区写入失败", e);
+                throw new RuntimeException("UPSERT 分区写入失败", e);
             }
-            ps.executeBatch();
-        }
-    });
-        
+        });
     }
 
     @Override

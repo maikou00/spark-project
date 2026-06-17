@@ -47,7 +47,7 @@ public final class JdbcConnectionPool {
                 try {
                     pool.close();
                 } catch (Exception e) {
-            log.warn("无法通过反射获取 Spark executor cores，按 CPU 核数（上限 8）计算池大小", e);
+                    log.warn("关闭连接池失败: {}", key, e);
                 }
             });
             POOLS.clear();
@@ -96,7 +96,7 @@ public final class JdbcConnectionPool {
         Properties appConfig = loadAppConfig();
         int maxSize = readInt(appConfig, ParamsKeyConstant.DATASOURCE_POOL_MAX_SIZE,
                 ParamsDefaultValue.DATASOURCE_POOL_MAX_SIZE);
-                config.setMaximumPoolSize(maxSize > 0 ? maxSize : resolveDefaultMaxPoolSize());
+        config.setMaximumPoolSize(maxSize > 0 ? maxSize : resolveDefaultMaxPoolSize());
         config.setMinimumIdle(readInt(appConfig, ParamsKeyConstant.DATASOURCE_POOL_MIN_IDLE,
                 ParamsDefaultValue.DATASOURCE_POOL_MIN_IDLE));
         config.setConnectionTimeout(readInt(appConfig, ParamsKeyConstant.DATASOURCE_POOL_CONNECTION_TIMEOUT,

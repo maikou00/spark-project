@@ -1,5 +1,6 @@
 package com.sziov.gacnev.datasource.hdfs;
 
+import com.sziov.gacnev.utils.WarehouseException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -33,7 +34,7 @@ public final class HdfsUtils {
             return FileSystem.get(conf);
         } catch (IOException e) {
             log.error("Failed to get FileSystem", e);
-            throw new RuntimeException("Failed to get FileSystem", e);
+            throw new WarehouseException("Failed to get FileSystem", e);
         }
     }
 
@@ -48,7 +49,7 @@ public final class HdfsUtils {
             return FileSystem.get(conf);
         } catch (IOException e) {
             log.error("Failed to get FileSystem", e);
-            throw new RuntimeException("Failed to get FileSystem", e);
+            throw new WarehouseException("Failed to get FileSystem", e);
         }
     }
 

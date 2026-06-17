@@ -1,5 +1,6 @@
 package com.sziov.gacnev.utils.spark;
 
+import com.sziov.gacnev.utils.WarehouseException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -39,7 +40,7 @@ public final class SparkSqlUtils {
             return df;
         } catch (Exception e) {
             log.error("Failed to execute SQL: {}", sql, e);
-            throw new RuntimeException("Failed to execute SQL", e);
+            throw new WarehouseException("Failed to execute SQL", e);
         }
     }
 
@@ -57,7 +58,7 @@ public final class SparkSqlUtils {
             log.info("SQL update executed successfully, elapsed time: {} ms, SQL: {}", endTime - startTime, sql);
         } catch (Exception e) {
             log.error("Failed to execute SQL update: {}", sql, e);
-            throw new RuntimeException("Failed to execute SQL update", e);
+            throw new WarehouseException("Failed to execute SQL update", e);
         }
     }
 

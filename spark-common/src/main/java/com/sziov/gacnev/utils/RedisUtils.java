@@ -36,14 +36,14 @@ public final class RedisUtils {
         throw new UnsupportedOperationException("工具类不允许实例化");
     }
 
-    public static StatefulRedisClusterConnection<String, String> borrowConnection() {
-
     /**
      * 从连接池借用一个 Redis 集群连接，连接池不存在时自动初始化。
      *
      * @return Redis 集群连接
      * @throws WarehouseException 连接池耗尽或初始化失败
-     */        if (POOL == null) {
+     */
+    public static StatefulRedisClusterConnection<String, String> borrowConnection() {
+        if (POOL == null) {
             synchronized (LOCK) {
                 if (POOL == null) {
                     initPool();

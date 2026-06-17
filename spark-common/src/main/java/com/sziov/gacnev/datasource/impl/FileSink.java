@@ -1,6 +1,7 @@
 package com.sziov.gacnev.datasource.impl;
 
 import com.sziov.gacnev.utils.RetryUtils;
+import com.sziov.gacnev.utils.WarehouseException;
 import com.sziov.gacnev.datasource.DataSink;
 import com.sziov.gacnev.datasource.option.FileOption;
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +64,7 @@ public class FileSink implements DataSink<FileOption> {
             }).start();
         } catch (java.util.concurrent.TimeoutException e) {
             log.error("FileSink 流式写入启动超时，format: {}", format, e);
-            throw new RuntimeException(format + " 流式写入启动失败", e);
+            throw new WarehouseException(format + " 流式写入启动失败", e);
         }
     }
 

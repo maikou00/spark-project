@@ -31,7 +31,6 @@ import java.util.Properties;
 @Slf4j
 public class DorisSink implements DataSink<DorisOption> {
 
-    
     @Override
     public void write(Dataset<Row> df, DorisOption options) {
         Properties dsConfig = DataSources.getDsConfig();
@@ -68,29 +67,27 @@ public class DorisSink implements DataSink<DorisOption> {
                 ParamsKeyConstant.DATASOURCE_DORIS_SINK_BATCH_INTERVAL_MS,
                 String.valueOf(ParamsDefaultValue.DATASOURCE_DORIS_SINK_BATCH_INTERVAL_MS));
 
-        
-    log.info("Stream Load 写入 Doris，表: {}，模式: {}，2PC: {}", resource, mode, enable2pc);
-    DataFrameWriter writer = df.write()
-            .format("doris")
-            .option("doris.fenodes", fenodes)
-            .option("doris.query.port", queryPort)
-            .option("doris.sink.enable-2pc", enable2pc)
-            .option("doris.sink.label-prefix", labelPrefix)
-            .option("doris.sink.max-retries", maxRetries)
-            .option("doris.sink.batch.size", batchSize)
-            .option("doris.sink.batch.interval.ms", batchInterval)
-            .option("user", username)
-            .option("password", password == null ? "" : password)
-            .option("doris.table.identifier", resource);
+        log.info("Stream Load 写入 Doris，表: {}，模式: {}，2PC: {}", resource, mode, enable2pc);
+        DataFrameWriter writer = df.write()
+                .format("doris")
+                .option("doris.fenodes", fenodes)
+                .option("doris.query.port", queryPort)
+                .option("doris.sink.enable-2pc", enable2pc)
+                .option("doris.sink.label-prefix", labelPrefix)
+                .option("doris.sink.max-retries", maxRetries)
+                .option("doris.sink.batch.size", batchSize)
+                .option("doris.sink.batch.interval.ms", batchInterval)
+                .option("user", username)
+                .option("password", password == null ? "" : password)
+                .option("doris.table.identifier", resource);
 
-    if (SaveMode.Overwrite.equals(mode)) {
-        writer = writer.mode("overwrite");
-    } else {
-        writer = writer.mode("append");
-    }
+        if (SaveMode.Overwrite.equals(mode)) {
+            writer = writer.mode("overwrite");
+        } else {
+            writer = writer.mode("append");
+        }
 
-    writer.save();
-        
+        writer.save();
     }
 
     @Override

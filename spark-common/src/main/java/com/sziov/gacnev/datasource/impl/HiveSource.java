@@ -33,11 +33,12 @@ public class HiveSource implements DataSource<HiveOption>, DataSourceProvider {
         String database = options.getDatabase();
         String table = options.getResource();
 
-        if (database != null && !database.isEmpty()) {
-            spark.catalog().setCurrentDatabase(database);
-        }
+        // 使用完全限定表名，避免修改全局 Session 状态引发并发问题
+        String fullTable = (database != null && !database.isEmpty())
+                ? database + "." + table
+                : table;
 
-        Dataset<Row> df = spark.table(table);
+        Dataset<Row> df = spark.table(fullTable);
         String partitionFilter = options.getPartitionFilter();
         if (partitionFilter != null && !partitionFilter.isEmpty()) {
             log.info("Hive 分区过滤: {}", partitionFilter);
