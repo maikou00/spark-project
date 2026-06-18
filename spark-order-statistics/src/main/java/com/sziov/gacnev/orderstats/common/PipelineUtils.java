@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.function.BiConsumer;
 
 import com.sziov.gacnev.utils.spark.SparkParameterTool;
 
@@ -35,7 +36,7 @@ public final class PipelineUtils {
      * @param params 命令行参数
      * @param task   单天任务
      */
-    public static void execute(SparkSession spark, Properties params, PipelineTask task) {
+    public static void execute(SparkSession spark, Properties params, BiConsumer<SparkSession, String> task) {
         String maxDate = yesterday();
         String start = params.getProperty("start");
         if (start != null) {
@@ -44,7 +45,7 @@ public final class PipelineUtils {
         } else {
             String dt = requireDate(params, "date", maxDate);
             try {
-                task.run(spark, dt);
+                task.accept(spark, dt);
             } catch (Exception e) {
                 throw new RuntimeException("dt=" + dt + " 执行失败", e);
             }
@@ -92,27 +93,28 @@ public final class PipelineUtils {
         return dates;
     }
 
-    private static void runBatch(SparkSession spark, List<String> dates, PipelineTask task) {
-        BatchResult result = new BatchResult();
+    private static void runBatch(SparkSession spark, List<String> dates, BiConsumer<SparkSession, String> task) {
+        int success = 0;
+        List<String> failed = new ArrayList<>();
         long totalStart = System.currentTimeMillis();
 
         log.info("批量任务启动, 共{}天, 范围: {} ~ {}", dates.size(), dates.get(0), dates.get(dates.size() - 1));
 
         for (String dt : dates) {
             try {
-                task.run(spark, dt);
-                result.incrementSuccess();
+                task.accept(spark, dt);
+                success++;
             } catch (Exception e) {
                 log.error("dt={} 执行失败，跳过继续", dt, e);
-                result.addFailed(dt);
+                failed.add(dt);
             }
         }
 
         log.info("批量任务完成: 成功={}, 失败={}, 总耗时={}ms",
-                result.getSuccess(), result.getFailedCount(),
+                success, failed.size(),
                 System.currentTimeMillis() - totalStart);
-        if (result.hasFailures()) {
-            log.warn("失败日期: {}", result.getFailedDates());
+        if (!failed.isEmpty()) {
+            log.warn("失败日期: {}", failed);
         }
     }
 }

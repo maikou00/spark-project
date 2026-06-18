@@ -1,6 +1,6 @@
-package com.sziov.gacnev.orderstats.ads;
+package com.sziov.gacnev.orderstats.processor;
 
-import com.sziov.gacnev.orderstats.config.OrderStatsConfig;
+import com.sziov.gacnev.orderstats.constant.OrderStatsConfig;
 import com.sziov.gacnev.datasource.DataSources;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.types.DataTypes;

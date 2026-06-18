@@ -4,7 +4,7 @@ import com.sziov.gacnev.utils.JsonUtils;
 import com.sziov.gacnev.datasource.DataSources;
 import org.apache.spark.sql.SaveMode;
 import static org.apache.spark.sql.functions.lit;
-import com.sziov.gacnev.orderstats.config.OrderStatsConfig;
+import com.sziov.gacnev.orderstats.constant.OrderStatsConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import static com.sziov.gacnev.orderstats.config.OrderStatsConfig.*;
+import static com.sziov.gacnev.orderstats.constant.OrderStatsConfig.*;
 
 /**
  * 数据模拟器：生成订单事件和维度数据的模拟数据，并写入 Hive ODS 层。
@@ -35,6 +35,20 @@ import static com.sziov.gacnev.orderstats.config.OrderStatsConfig.*;
  */
 @Slf4j
 public final class DataSimulator {
+
+    // ==================== 模拟常量 ====================
+    private static final int SIM_USER_COUNT = 100;
+    private static final int SIM_PRODUCT_COUNT = 50;
+    private static final int SIM_STORE_COUNT = 10;
+    private static final int SIM_ORDER_COUNT = 500;
+    private static final int SIM_SELF_OPERATED_STORE_INDEX = 8;
+    private static final double SIM_DIRTY_EMPTY_ID_RATIO = 0.03;
+    private static final double SIM_DIRTY_BAD_JSON_RATIO = 0.02;
+    private static final double SIM_DIRTY_DUPLICATE_RATIO = 0.02;
+    private static final double SIM_PAY_RATE = 0.85;
+    private static final double SIM_SHIP_RATE = 0.90;
+    private static final double SIM_SIGN_RATE = 0.95;
+    private static final double SIM_REFUND_RATE = 0.15;
 
     private static final Random RANDOM = new Random();
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -94,7 +108,7 @@ public final class DataSimulator {
 
     private void generateUsers() {
         List<Row> rows = new ArrayList<>();
-        for (int i = 0; i < OrderStatsConfig.SIM_USER_COUNT; i++) {
+        for (int i = 0; i < SIM_USER_COUNT; i++) {
             Map<String, String> user = new HashMap<>();
             String userId = "U" + String.format("%04d", i + 1);
             user.put("user_id", userId);
@@ -129,7 +143,7 @@ public final class DataSimulator {
 
     private void generateProducts() {
         List<Row> rows = new ArrayList<>();
-        for (int i = 0; i < OrderStatsConfig.SIM_PRODUCT_COUNT; i++) {
+        for (int i = 0; i < SIM_PRODUCT_COUNT; i++) {
             Map<String, String> product = new HashMap<>();
             String productId = "P" + String.format("%04d", i + 1);
             String category = CATEGORIES[RANDOM.nextInt(CATEGORIES.length)];
@@ -161,14 +175,14 @@ public final class DataSimulator {
 
     private void generateStores() {
         List<Row> rows = new ArrayList<>();
-        for (int i = 0; i < OrderStatsConfig.SIM_STORE_COUNT; i++) {
+        for (int i = 0; i < SIM_STORE_COUNT; i++) {
             Map<String, String> store = new HashMap<>();
             String storeId = "S" + String.format("%04d", i + 1);
             store.put("store_id", storeId);
             store.put("store_name", STORE_NAMES[i]);
             stores.add(store);
 
-            String storeType = i == OrderStatsConfig.SIM_SELF_OPERATED_STORE_INDEX ? "self" : "third";
+            String storeType = i == SIM_SELF_OPERATED_STORE_INDEX ? "self" : "third";
             BigDecimal rating = BigDecimal.valueOf(3.0 + RANDOM.nextDouble() * 2.0)
                     .setScale(1, RoundingMode.HALF_UP);
 
@@ -212,12 +226,12 @@ public final class DataSimulator {
 
     private void generateOrderEvents() {
         List<Row> rows = new ArrayList<>();
-        int expectedDirtyEmptyId = (int) (OrderStatsConfig.SIM_ORDER_COUNT * OrderStatsConfig.SIM_DIRTY_EMPTY_ID_RATIO);
-        int expectedDirtyBadJson = (int) (OrderStatsConfig.SIM_ORDER_COUNT * OrderStatsConfig.SIM_DIRTY_BAD_JSON_RATIO);
-        int expectedDirtyDuplicate = (int) (OrderStatsConfig.SIM_ORDER_COUNT * OrderStatsConfig.SIM_DIRTY_DUPLICATE_RATIO);
+        int expectedDirtyEmptyId = (int) (SIM_ORDER_COUNT * SIM_DIRTY_EMPTY_ID_RATIO);
+        int expectedDirtyBadJson = (int) (SIM_ORDER_COUNT * SIM_DIRTY_BAD_JSON_RATIO);
+        int expectedDirtyDuplicate = (int) (SIM_ORDER_COUNT * SIM_DIRTY_DUPLICATE_RATIO);
 
         int totalEvents = 0;
-        for (int i = 0; i < OrderStatsConfig.SIM_ORDER_COUNT; i++) {
+        for (int i = 0; i < SIM_ORDER_COUNT; i++) {
             String orderId = "ORD" + String.format("%06d", i + 1);
             Map<String, String> user = users.get(RANDOM.nextInt(users.size()));
             Map<String, String> product = products.get(RANDOM.nextInt(products.size()));
@@ -286,16 +300,16 @@ public final class DataSimulator {
 
     private List<String> generateEventSequence() {
         List<String> events = new ArrayList<>(Collections.singletonList(EVENT_CREATE));
-        if (RANDOM.nextDouble() < OrderStatsConfig.SIM_PAY_RATE) {
+        if (RANDOM.nextDouble() < SIM_PAY_RATE) {
             events.add(EVENT_PAY);
-            if (RANDOM.nextDouble() < OrderStatsConfig.SIM_SHIP_RATE) {
+            if (RANDOM.nextDouble() < SIM_SHIP_RATE) {
                 events.add(EVENT_SHIP);
-                if (RANDOM.nextDouble() < OrderStatsConfig.SIM_SIGN_RATE) {
+                if (RANDOM.nextDouble() < SIM_SIGN_RATE) {
                     events.add(EVENT_SIGN);
                 }
             }
         }
-        if (events.contains(EVENT_SIGN) && RANDOM.nextDouble() < OrderStatsConfig.SIM_REFUND_RATE) {
+        if (events.contains(EVENT_SIGN) && RANDOM.nextDouble() < SIM_REFUND_RATE) {
             events.add(EVENT_REFUND);
         }
         return events;

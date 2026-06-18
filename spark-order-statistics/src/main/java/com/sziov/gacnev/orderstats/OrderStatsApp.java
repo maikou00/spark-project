@@ -2,14 +2,14 @@ package com.sziov.gacnev.orderstats;
 
 import java.util.Properties;
 
-import com.sziov.gacnev.orderstats.ads.AdsProcessor;
+import com.sziov.gacnev.orderstats.processor.AdsProcessor;
 import com.sziov.gacnev.orderstats.common.InitUtils;
 import com.sziov.gacnev.orderstats.common.PipelineUtils;
-import com.sziov.gacnev.orderstats.config.OrderStatsConfig;
-import com.sziov.gacnev.orderstats.dim.DimProcessor;
-import com.sziov.gacnev.orderstats.dwd.DwdProcessor;
-import com.sziov.gacnev.orderstats.dws.DwsProcessor;
-import com.sziov.gacnev.orderstats.ods.OdsProcessor;
+import com.sziov.gacnev.orderstats.constant.OrderStatsConfig;
+import com.sziov.gacnev.orderstats.processor.DimProcessor;
+import com.sziov.gacnev.orderstats.processor.DwdProcessor;
+import com.sziov.gacnev.orderstats.processor.DwsProcessor;
+import com.sziov.gacnev.orderstats.processor.OdsProcessor;
 import com.sziov.gacnev.utils.spark.SparkEnvUtils;
 import com.sziov.gacnev.utils.spark.SparkParameterTool;
 

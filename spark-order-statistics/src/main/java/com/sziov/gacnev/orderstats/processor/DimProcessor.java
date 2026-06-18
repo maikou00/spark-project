@@ -1,9 +1,9 @@
-package com.sziov.gacnev.orderstats.dim;
+package com.sziov.gacnev.orderstats.processor;
 
 import com.sziov.gacnev.utils.etl.EtlUtils;
 import com.sziov.gacnev.datasource.DataSources;
 import org.apache.spark.sql.SaveMode;
-import com.sziov.gacnev.orderstats.config.OrderStatsConfig;
+import com.sziov.gacnev.orderstats.constant.OrderStatsConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;

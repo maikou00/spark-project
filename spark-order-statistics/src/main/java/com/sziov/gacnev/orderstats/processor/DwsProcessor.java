@@ -1,6 +1,6 @@
-package com.sziov.gacnev.orderstats.dws;
+package com.sziov.gacnev.orderstats.processor;
 
-import com.sziov.gacnev.orderstats.config.OrderStatsConfig;
+import com.sziov.gacnev.orderstats.constant.OrderStatsConfig;
 import com.sziov.gacnev.datasource.DataSources;
 import org.apache.spark.sql.SaveMode;
 import lombok.extern.slf4j.Slf4j;

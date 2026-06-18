@@ -1,7 +1,5 @@
-package com.sziov.gacnev.orderstats.config;
+package com.sziov.gacnev.orderstats.constant;
 
-import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.StructType;
 
 /**
  * 订单统计模块常量配置：表名、字段名、Schema 定义。
@@ -70,52 +68,5 @@ public final class OrderStatsConfig {
     public static final String TBL_DIM_PRODUCT = "dim_product";
     public static final String TBL_DIM_STORE = "dim_store";
     public static final String TBL_DIM_REGION = "dim_region";
-
-    // ==================== Schema 定义 ====================
-
-    public static final StructType ORDER_EVENT_SCHEMA = new StructType()
-            .add("order_id", DataTypes.StringType, false)
-            .add("user_id", DataTypes.StringType, false)
-            .add("product_id", DataTypes.StringType, false)
-            .add("store_id", DataTypes.StringType, false)
-            .add("region_id", DataTypes.StringType, false)
-            .add("order_amount", DataTypes.createDecimalType(18, 2), false)
-            .add("order_status", DataTypes.StringType, false)
-            .add("create_time", DataTypes.StringType, true)
-            .add("pay_time", DataTypes.StringType, true)
-            .add("ship_time", DataTypes.StringType, true)
-            .add("sign_time", DataTypes.StringType, true)
-            .add("refund_time", DataTypes.StringType, true);
-
-    public static final StructType DWS_ORDER_DAILY_SCHEMA = new StructType()
-            .add("dim_type", DataTypes.StringType, false)
-            .add("dim_id", DataTypes.StringType, false)
-            .add("order_count", DataTypes.LongType, false)
-            .add("total_amount", DataTypes.createDecimalType(18, 2), false)
-            .add("paid_count", DataTypes.LongType, false)
-            .add("refund_count", DataTypes.LongType, false);
-
-    public static final StructType ADS_ORDER_KPI_SCHEMA = new StructType()
-            .add("total_orders", DataTypes.LongType, false)
-            .add("total_gmv", DataTypes.createDecimalType(18, 2), false)
-            .add("avg_order_amount", DataTypes.createDecimalType(18, 2), false)
-            .add("paid_orders", DataTypes.LongType, false)
-            .add("payment_rate", DataTypes.createDecimalType(5, 4), false)
-            .add("refund_orders", DataTypes.LongType, false)
-            .add("refund_rate", DataTypes.createDecimalType(5, 4), false);
-
-    // ==================== 数据模拟常量 ====================
-
-    public static final int SIM_USER_COUNT = 100;
-    public static final int SIM_PRODUCT_COUNT = 50;
-    public static final int SIM_STORE_COUNT = 10;
-    public static final int SIM_ORDER_COUNT = 500;
-    public static final int SIM_SELF_OPERATED_STORE_INDEX = 8;
-    public static final double SIM_DIRTY_EMPTY_ID_RATIO = 0.03;
-    public static final double SIM_DIRTY_BAD_JSON_RATIO = 0.02;
-    public static final double SIM_DIRTY_DUPLICATE_RATIO = 0.02;
-    public static final double SIM_PAY_RATE = 0.85;
-    public static final double SIM_SHIP_RATE = 0.90;
-    public static final double SIM_SIGN_RATE = 0.95;
-    public static final double SIM_REFUND_RATE = 0.15;
 }
+

@@ -1,10 +1,10 @@
-package com.sziov.gacnev.orderstats.dwd;
+package com.sziov.gacnev.orderstats.processor;
 
 import com.sziov.gacnev.datasource.DataSources;
 import org.apache.spark.sql.SaveMode;
 import com.sziov.gacnev.utils.etl.EtlUtils;
-import com.sziov.gacnev.orderstats.config.OrderStatsConfig;
-import lombok.extern.slf4j.Slf4j;
+import com.sziov.gacnev.orderstats.constant.OrderStatsConfig;
+import com.sziov.gacnev.orderstats.schema.OrderStatsSchema;import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -49,7 +49,7 @@ public final class DwdProcessor {
         // JSON 解析 + 过滤解析失败
         Dataset<Row> parsedDf = validIdDf
                 .withColumn("parsed", from_json(col("event_data"),
-                        OrderStatsConfig.ORDER_EVENT_SCHEMA));
+                        OrderStatsSchema.ORDER_EVENT));
         Dataset<Row> validJsonDf = parsedDf.filter(col("parsed").isNotNull());
 
         // 展开 + 核心字段非空过滤 + 去重
