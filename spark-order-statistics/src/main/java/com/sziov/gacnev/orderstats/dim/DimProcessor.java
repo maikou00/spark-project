@@ -1,6 +1,6 @@
 package com.sziov.gacnev.orderstats.dim;
 
-import com.sziov.gacnev.etl.EtlUtils;
+import com.sziov.gacnev.utils.etl.EtlUtils;
 import com.sziov.gacnev.datasource.DataSources;
 import org.apache.spark.sql.SaveMode;
 import com.sziov.gacnev.orderstats.config.OrderStatsConfig;

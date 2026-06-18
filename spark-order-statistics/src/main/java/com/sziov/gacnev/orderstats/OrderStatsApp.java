@@ -1,7 +1,7 @@
 package com.sziov.gacnev.orderstats;
 
-import com.sziov.gacnev.common.DateUtils;
-import com.sziov.gacnev.etl.DataQEUtils;
+import com.sziov.gacnev.utils.DateUtils;
+import com.sziov.gacnev.utils.etl.DataQEUtils;
 import com.sziov.gacnev.orderstats.ads.AdsProcessor;
 import com.sziov.gacnev.orderstats.config.OrderStatsConfig;
 import com.sziov.gacnev.orderstats.datasimulator.DataSimulator;
@@ -9,9 +9,9 @@ import com.sziov.gacnev.orderstats.dim.DimProcessor;
 import com.sziov.gacnev.orderstats.dwd.DwdProcessor;
 import com.sziov.gacnev.orderstats.dws.DwsProcessor;
 import com.sziov.gacnev.orderstats.ods.OdsProcessor;
-import com.sziov.gacnev.spark.SparkEnvUtils;
-import com.sziov.gacnev.spark.SparkParameterTool;
-import com.sziov.gacnev.spark.SparkSqlUtils;
+import com.sziov.gacnev.utils.spark.SparkEnvUtils;
+import com.sziov.gacnev.utils.spark.SparkParameterTool;
+import com.sziov.gacnev.utils.spark.SparkSqlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
