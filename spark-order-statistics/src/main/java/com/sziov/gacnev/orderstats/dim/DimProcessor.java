@@ -11,6 +11,7 @@ import org.apache.spark.sql.SparkSession;
 
 /**
  * DIM 层处理器：维度数据去重覆盖（SCD Type 1），写入 Hive DIM 层。
+ * <p>一致性语义：SaveMode.Overwrite 为 <b>最终一致</b>。</p>
  *
  * @author maikou
  * @since 2026-06-09
@@ -26,79 +27,41 @@ public final class DimProcessor {
         this.dt = dt;
     }
 
-    /**
-     * 处理用户维度：去重 → 写入 dim_user。
-     *
-     * @param odsUserDf ODS 用户 DataFrame
-     */
     public void processUserDim(Dataset<Row> odsUserDf) {
-        log.info("[DIM] 开始处理用户维度");
-        long startTime = System.currentTimeMillis();
-        Dataset<Row> cleaned = EtlUtils.cleanData(odsUserDf,
-                new String[]{"user_id", "user_name", "phone", "email"});
-        Dataset<Row> deduped = EtlUtils.dropDuplicates(cleaned, new String[]{"user_id"}).drop("dt");
-        long count = deduped.count();
-        writeToDim(deduped, OrderStatsConfig.DIM_USER, "user_id");
-        long elapsed = System.currentTimeMillis() - startTime;
-        log.info("[DIM] 用户维度处理完成，行数: {}, 耗时: {}ms", count, elapsed);
+        processDim(odsUserDf, new String[]{"user_id", "user_name", "phone", "email"},
+                new String[]{"user_id"}, OrderStatsConfig.TBL_DIM_USER, "register_date");
     }
 
-    /**
-     * 处理商品维度：去重 → 写入 dim_product。
-     *
-     * @param odsProductDf ODS 商品 DataFrame
-     */
     public void processProductDim(Dataset<Row> odsProductDf) {
-        log.info("[DIM] 开始处理商品维度");
-        long startTime = System.currentTimeMillis();
-        Dataset<Row> cleaned = EtlUtils.cleanData(odsProductDf,
-                new String[]{"product_id", "product_name", "category"});
-        Dataset<Row> deduped = EtlUtils.dropDuplicates(cleaned, new String[]{"product_id"}).drop("dt");
-        long count = deduped.count();
-        writeToDim(deduped, OrderStatsConfig.DIM_PRODUCT, "product_id");
-        long elapsed = System.currentTimeMillis() - startTime;
-        log.info("[DIM] 商品维度处理完成，行数: {}, 耗时: {}ms", count, elapsed);
+        processDim(odsProductDf, new String[]{"product_id", "product_name", "category"},
+                new String[]{"product_id"}, OrderStatsConfig.TBL_DIM_PRODUCT);
     }
 
-    /**
-     * 处理店铺维度：去重 → 写入 dim_store。
-     *
-     * @param odsStoreDf ODS 店铺 DataFrame
-     */
     public void processStoreDim(Dataset<Row> odsStoreDf) {
-        log.info("[DIM] 开始处理店铺维度");
-        long startTime = System.currentTimeMillis();
-        Dataset<Row> cleaned = EtlUtils.cleanData(odsStoreDf,
-                new String[]{"store_id", "store_name"});
-        Dataset<Row> deduped = EtlUtils.dropDuplicates(cleaned, new String[]{"store_id"}).drop("dt");
-        long count = deduped.count();
-        writeToDim(deduped, OrderStatsConfig.DIM_STORE, "store_id");
-        long elapsed = System.currentTimeMillis() - startTime;
-        log.info("[DIM] 店铺维度处理完成，行数: {}, 耗时: {}ms", count, elapsed);
+        processDim(odsStoreDf, new String[]{"store_id", "store_name"},
+                new String[]{"store_id"}, OrderStatsConfig.TBL_DIM_STORE);
     }
 
-    /**
-     * 处理地区维度：去重 → 写入 dim_region。
-     *
-     * @param odsRegionDf ODS 地区 DataFrame
-     */
     public void processRegionDim(Dataset<Row> odsRegionDf) {
-        log.info("[DIM] 开始处理地区维度");
-        long startTime = System.currentTimeMillis();
-        Dataset<Row> cleaned = EtlUtils.cleanData(odsRegionDf,
-                new String[]{"region_id", "region_name"});
-        Dataset<Row> deduped = EtlUtils.dropDuplicates(cleaned, new String[]{"region_id"}).drop("dt");
-        long count = deduped.count();
-        writeToDim(deduped, OrderStatsConfig.DIM_REGION, "region_id");
-        long elapsed = System.currentTimeMillis() - startTime;
-        log.info("[DIM] 地区维度处理完成，行数: {}, 耗时: {}ms", count, elapsed);
+        processDim(odsRegionDf, new String[]{"region_id", "region_name"},
+                new String[]{"region_id"}, OrderStatsConfig.TBL_DIM_REGION);
     }
 
-    private void writeToDim(Dataset<Row> df, String tableName, String dimKey) {
+    private void processDim(Dataset<Row> odsDf, String[] cleanCols, String[] dedupCols,
+                            String tableName, String... extraDropCols) {
+        long rawCount = odsDf.count();
+        if (rawCount == 0) {
+            log.warn("[DIM] {} ODS 源数据为空，跳过写入以避免覆盖现有维度数据", tableName);
+            return;
+        }
+        Dataset<Row> cleaned = EtlUtils.cleanData(odsDf, cleanCols);
+        Dataset<Row> deduped = EtlUtils.dropDuplicates(cleaned, dedupCols).drop("dt");
+        for (String col : extraDropCols) {
+            deduped = deduped.drop(col);
+        }
         DataSources.hive()
-                .option(o -> o.setDatabase("dim")
+                .option(o -> o.setDatabase(OrderStatsConfig.DB_DIM)
                         .setWriteMode(SaveMode.Overwrite))
-                .write(df, tableName);
-        log.info("[DIM] 写入Hive完成: {}", tableName);
+                .write(deduped, tableName);
     }
 }

@@ -3,6 +3,7 @@ package com.sziov.gacnev.orderstats.datasimulator;
 import com.sziov.gacnev.utils.JsonUtils;
 import com.sziov.gacnev.datasource.DataSources;
 import org.apache.spark.sql.SaveMode;
+import static org.apache.spark.sql.functions.lit;
 import com.sziov.gacnev.orderstats.config.OrderStatsConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.spark.sql.Dataset;
@@ -38,14 +39,6 @@ public final class DataSimulator {
     private static final Random RANDOM = new Random();
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final int USER_COUNT = 100;
-    private static final int PRODUCT_COUNT = 50;
-    private static final int STORE_COUNT = 10;
-    private static final int ORDER_COUNT = 500;
-
-    private static final double DIRTY_EMPTY_ID_RATIO = 0.03;
-    private static final double DIRTY_BAD_JSON_RATIO = 0.02;
-    private static final double DIRTY_DUPLICATE_RATIO = 0.02;
 
     private static final String[] FIRST_NAMES = {"张", "李", "王", "刘", "陈", "杨", "黄", "赵", "周", "吴",
             "徐", "孙", "马", "朱", "胡", "郭", "何", "高", "林", "罗"};
@@ -91,37 +84,37 @@ public final class DataSimulator {
         DataSimulator simulator = new DataSimulator(spark, dt);
         simulator.generateDimensionData();
         simulator.generateOrderEvents();
-        simulator.printDirtySummary();
     }
 
     private void generateDimensionData() {
-        log.info("========== 开始生成维度数据，日期: {} ==========", dt);
         generateUsers();
         generateProducts();
         generateStores();
-        generateRegions();
-        log.info("维度数据生成完成: 用户{}人, 商品{}个, 店铺{}家, 地区{}个",
-                users.size(), products.size(), stores.size(), REGIONS.length);
     }
 
     private void generateUsers() {
         List<Row> rows = new ArrayList<>();
-        for (int i = 0; i < USER_COUNT; i++) {
+        for (int i = 0; i < OrderStatsConfig.SIM_USER_COUNT; i++) {
             Map<String, String> user = new HashMap<>();
             String userId = "U" + String.format("%04d", i + 1);
             user.put("user_id", userId);
-            String firstName = FIRST_NAMES[RANDOM.nextInt(FIRST_NAMES.length)];
-            String lastName = LAST_NAMES[RANDOM.nextInt(LAST_NAMES.length)];
-            user.put("user_name", firstName + lastName);
-            user.put("phone", "1" + (3 + RANDOM.nextInt(7)) + String.format("%09d", RANDOM.nextInt(1000000000)));
-            user.put("email", "user" + (i + 1) + "@example.com");
-            user.put("register_date", LocalDate.of(2025, 1, 1)
-                    .plusDays(RANDOM.nextInt(500)).format(DATE_FMT));
-            user.put("region_id", REGIONS[RANDOM.nextInt(REGIONS.length)][0]);
+            user.put("user_name", FIRST_NAMES[RANDOM.nextInt(FIRST_NAMES.length)]
+                    + LAST_NAMES[RANDOM.nextInt(LAST_NAMES.length)]);
+            user.put("phone", "138" + String.format("%08d", RANDOM.nextInt(100000000)));
+            user.put("email", userId.toLowerCase() + "@example.com");
+            String registerDate = LocalDate.parse(dt, DATE_FMT)
+                    .minusDays(RANDOM.nextInt(365))
+                    .format(DATE_FMT);
+            String regionId = REGIONS[RANDOM.nextInt(REGIONS.length)][0];
+
+            user.put("register_date", registerDate);
+            user.put("region_id", regionId);
             users.add(user);
-            rows.add(RowFactory.create(userId, user.get("user_name"), user.get("phone"),
-                    user.get("email"), user.get("register_date"), user.get("region_id")));
+
+            rows.add(RowFactory.create(userId, user.get("user_name"),
+                    user.get("phone"), user.get("email"), registerDate, regionId));
         }
+
         StructType schema = new StructType()
                 .add("user_id", DataTypes.StringType)
                 .add("user_name", DataTypes.StringType)
@@ -129,54 +122,65 @@ public final class DataSimulator {
                 .add("email", DataTypes.StringType)
                 .add("register_date", DataTypes.StringType)
                 .add("region_id", DataTypes.StringType);
+
         Dataset<Row> df = spark.createDataFrame(rows, schema);
         writeToOds("ods_user", df);
     }
 
     private void generateProducts() {
         List<Row> rows = new ArrayList<>();
-        for (int i = 0; i < PRODUCT_COUNT; i++) {
+        for (int i = 0; i < OrderStatsConfig.SIM_PRODUCT_COUNT; i++) {
             Map<String, String> product = new HashMap<>();
-            product.put("product_id", "P" + String.format("%04d", i + 1));
-            product.put("product_name", "商品" + (i + 1));
-            product.put("category", CATEGORIES[RANDOM.nextInt(CATEGORIES.length)]);
-            BigDecimal price = BigDecimal.valueOf(10 + RANDOM.nextDouble() * 990)
-                    .setScale(2, RoundingMode.HALF_UP);
-            product.put("unit_price", price.toString());
-            product.put("stock", String.valueOf(100 + RANDOM.nextInt(9900)));
+            String productId = "P" + String.format("%04d", i + 1);
+            String category = CATEGORIES[RANDOM.nextInt(CATEGORIES.length)];
+            String productName = category.replaceAll("[^\\u4e00-\\u9fa5]", "")
+                    + RANDOM.nextInt(100);
+
+            product.put("product_id", productId);
+            product.put("product_name", productName);
+            product.put("category", category);
             products.add(product);
-            rows.add(RowFactory.create(product.get("product_id"), product.get("product_name"),
-                    product.get("category"), price, Integer.parseInt(product.get("stock"))));
+
+            BigDecimal unitPrice = BigDecimal.valueOf(10 + RANDOM.nextDouble() * 990)
+                    .setScale(2, RoundingMode.HALF_UP);
+            int stock = 50 + RANDOM.nextInt(450);
+
+            rows.add(RowFactory.create(productId, productName, category, unitPrice, stock));
         }
+
         StructType schema = new StructType()
                 .add("product_id", DataTypes.StringType)
                 .add("product_name", DataTypes.StringType)
                 .add("category", DataTypes.StringType)
                 .add("unit_price", DataTypes.createDecimalType(18, 2))
                 .add("stock", DataTypes.IntegerType);
+
         Dataset<Row> df = spark.createDataFrame(rows, schema);
         writeToOds("ods_product", df);
     }
 
     private void generateStores() {
         List<Row> rows = new ArrayList<>();
-        for (int i = 0; i < STORE_COUNT; i++) {
+        for (int i = 0; i < OrderStatsConfig.SIM_STORE_COUNT; i++) {
             Map<String, String> store = new HashMap<>();
-            store.put("store_id", "S" + String.format("%04d", i + 1));
+            String storeId = "S" + String.format("%04d", i + 1);
+            store.put("store_id", storeId);
             store.put("store_name", STORE_NAMES[i]);
-            store.put("store_type", i == 8 ? "self" : "third");
+            stores.add(store);
+
+            String storeType = i == OrderStatsConfig.SIM_SELF_OPERATED_STORE_INDEX ? "self" : "third";
             BigDecimal rating = BigDecimal.valueOf(3.0 + RANDOM.nextDouble() * 2.0)
                     .setScale(1, RoundingMode.HALF_UP);
-            store.put("rating", rating.toString());
-            stores.add(store);
-            rows.add(RowFactory.create(store.get("store_id"), store.get("store_name"),
-                    store.get("store_type"), rating));
+
+            rows.add(RowFactory.create(storeId, STORE_NAMES[i], storeType, rating));
         }
+
         StructType schema = new StructType()
                 .add("store_id", DataTypes.StringType)
                 .add("store_name", DataTypes.StringType)
                 .add("store_type", DataTypes.StringType)
                 .add("rating", DataTypes.createDecimalType(3, 1));
+
         Dataset<Row> df = spark.createDataFrame(rows, schema);
         writeToOds("ods_store", df);
     }
@@ -184,37 +188,36 @@ public final class DataSimulator {
     private void generateRegions() {
         List<Row> rows = new ArrayList<>();
         for (String[] r : REGIONS) {
-            rows.add(RowFactory.create(r[0], r[1],
-                    r[2] != null ? r[2] : null, r[3]));
+            rows.add(RowFactory.create((Object[]) r));
         }
+
         StructType schema = new StructType()
                 .add("region_id", DataTypes.StringType)
                 .add("region_name", DataTypes.StringType)
                 .add("parent_region_id", DataTypes.StringType)
                 .add("region_level", DataTypes.StringType);
+
         Dataset<Row> df = spark.createDataFrame(rows, schema);
         writeToOds("ods_region", df);
     }
 
     private void writeToOds(String tableName, Dataset<Row> df) {
-        long rowCount = df.count();
+        spark.sql("ALTER TABLE ods." + tableName
+                + " DROP IF EXISTS PARTITION (dt='" + dt + "')");
         DataSources.hive()
-                .option(o -> o.setDatabase("ods")
-                        .setWriteMode(SaveMode.Overwrite))
-                .write(df, tableName);
-        log.info("ODS表写入完成: {}, 行数: {}", tableName, rowCount);
+                .option(o -> o.setDatabase(OrderStatsConfig.DB_ODS)
+                        .setWriteMode(SaveMode.Append))
+                .write(df.withColumn(OrderStatsConfig.PART_DT, lit(dt)), tableName);
     }
 
     private void generateOrderEvents() {
-        log.info("开始生成订单事件，目标订单数: {}", ORDER_COUNT);
-
         List<Row> rows = new ArrayList<>();
-        int expectedDirtyEmptyId = (int) (ORDER_COUNT * DIRTY_EMPTY_ID_RATIO);
-        int expectedDirtyBadJson = (int) (ORDER_COUNT * DIRTY_BAD_JSON_RATIO);
-        int expectedDirtyDuplicate = (int) (ORDER_COUNT * DIRTY_DUPLICATE_RATIO);
+        int expectedDirtyEmptyId = (int) (OrderStatsConfig.SIM_ORDER_COUNT * OrderStatsConfig.SIM_DIRTY_EMPTY_ID_RATIO);
+        int expectedDirtyBadJson = (int) (OrderStatsConfig.SIM_ORDER_COUNT * OrderStatsConfig.SIM_DIRTY_BAD_JSON_RATIO);
+        int expectedDirtyDuplicate = (int) (OrderStatsConfig.SIM_ORDER_COUNT * OrderStatsConfig.SIM_DIRTY_DUPLICATE_RATIO);
 
         int totalEvents = 0;
-        for (int i = 0; i < ORDER_COUNT; i++) {
+        for (int i = 0; i < OrderStatsConfig.SIM_ORDER_COUNT; i++) {
             String orderId = "ORD" + String.format("%06d", i + 1);
             Map<String, String> user = users.get(RANDOM.nextInt(users.size()));
             Map<String, String> product = products.get(RANDOM.nextInt(products.size()));
@@ -247,7 +250,6 @@ public final class DataSimulator {
 
                 String eventData = JsonUtils.toJson(orderData);
 
-                // 脏数据注入
                 if (dirtyEmptyIdCount < expectedDirtyEmptyId && RANDOM.nextDouble() < 0.5) {
                     eventId = "";
                     dirtyEmptyIdCount++;
@@ -262,7 +264,6 @@ public final class DataSimulator {
             }
         }
 
-        // 重复数据注入
         for (int i = 0; i < expectedDirtyDuplicate && !rows.isEmpty(); i++) {
             Row src = rows.get(RANDOM.nextInt(rows.size()));
             rows.add(RowFactory.create(src.getString(0), src.getString(1),
@@ -281,31 +282,22 @@ public final class DataSimulator {
 
         Dataset<Row> df = spark.createDataFrame(rows, schema);
         writeToOds("ods_order_event", df);
-        log.info("订单事件生成完成，总事件数: {}, 包含订单数: {}", totalEvents, ORDER_COUNT);
     }
 
     private List<String> generateEventSequence() {
         List<String> events = new ArrayList<>(Collections.singletonList(EVENT_CREATE));
-        if (RANDOM.nextDouble() < 0.85) {
+        if (RANDOM.nextDouble() < OrderStatsConfig.SIM_PAY_RATE) {
             events.add(EVENT_PAY);
-            if (RANDOM.nextDouble() < 0.90) {
+            if (RANDOM.nextDouble() < OrderStatsConfig.SIM_SHIP_RATE) {
                 events.add(EVENT_SHIP);
-                if (RANDOM.nextDouble() < 0.95) {
+                if (RANDOM.nextDouble() < OrderStatsConfig.SIM_SIGN_RATE) {
                     events.add(EVENT_SIGN);
                 }
             }
         }
-        if (events.contains(EVENT_SIGN) && RANDOM.nextDouble() < 0.15) {
+        if (events.contains(EVENT_SIGN) && RANDOM.nextDouble() < OrderStatsConfig.SIM_REFUND_RATE) {
             events.add(EVENT_REFUND);
         }
         return events;
-    }
-
-    private void printDirtySummary() {
-        log.info("========== 脏数据注入汇总 ==========");
-        log.info("空event_id: {} 条", dirtyEmptyIdCount);
-        log.info("格式错误JSON: {} 条", dirtyBadJsonCount);
-        log.info("重复event_id: {} 条", dirtyDuplicateCount);
-        log.info("====================================");
     }
 }

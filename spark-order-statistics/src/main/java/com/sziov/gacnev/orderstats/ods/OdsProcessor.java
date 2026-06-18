@@ -8,15 +8,13 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
 /**
- * ODS 层处理器：读取 Hive ODS 表并输出数据质量报告。
+ * ODS 层处理器：读取 Hive ODS 贴源表。
  *
  * @author maikou
  * @since 2026-06-09
  */
 @Slf4j
 public final class OdsProcessor {
-
-    private static final String DB_ODS = OrderStatsConfig.DB_ODS;
 
     private final SparkSession spark;
     private final String dt;
@@ -27,7 +25,6 @@ public final class OdsProcessor {
     }
 
     public Dataset<Row> readOrderEvents() {
-        log.info("[ODS] 读取订单事件表: ods_order_event");
         return readOdsTable("ods_order_event");
     }
 
@@ -49,7 +46,7 @@ public final class OdsProcessor {
 
     private Dataset<Row> readOdsTable(String tableName) {
         return DataSources.hive()
-                .option(o -> o.setDatabase(DB_ODS)
+                .option(o -> o.setDatabase(OrderStatsConfig.DB_ODS)
                         .setPartitionFilter(OrderStatsConfig.PART_DT + "='" + dt + "'"))
                 .read(spark, tableName);
     }
