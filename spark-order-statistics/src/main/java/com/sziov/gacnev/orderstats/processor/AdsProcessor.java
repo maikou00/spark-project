@@ -9,12 +9,11 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
-import static org.apache.spark.sql.functions.lit;
+import static org.apache.spark.sql.functions.*;
 
 /**
- * ADS 层处理器：基于 DWD 订单事实表计算每日核心 KPI 指标。
- * <p>写策略：写入 Doris（应用服务层），Doris 表需为 UNIQUE KEY(dt) 模型以保证幂等 upsert。
- * 一致性语义：Doris Stream Load 为 <b>至少一次</b>（label 去重可幂等）。</p>
+ * ADS 层处理器：基于 DWS 汇总表计算每日核心 KPI → Doris。
+ * <p>取 user 维度汇总作为全局 KPI 基准，Doris 表需为 UNIQUE KEY(dt) 模型以保证幂等 upsert。</p>
  *
  * @author maikou
  * @since 2026-06-09
@@ -30,30 +29,27 @@ public final class AdsProcessor {
         this.dt = dt;
     }
 
-    public void process(Dataset<Row> dwdDf) {
-        String paidStatuses = OrderStatsConfig.PAID_STATUSES;
-        String refundEvent = OrderStatsConfig.EVENT_REFUND;
-
-        dwdDf.createOrReplaceTempView("dwd_for_kpi");
-
-        Dataset<Row> kpiDf = spark.sql(
-                "SELECT "
-                        + "COUNT(1) AS total_orders, "
-                        + "COALESCE(SUM(order_amount), 0) AS total_gmv, "
-                        + "COALESCE(ROUND(SUM(order_amount) / COUNT(1), 2), 0) AS avg_order_amount, "
-                        + "COALESCE(SUM(CASE WHEN order_status IN (" + paidStatuses + ") THEN 1 ELSE 0 END), 0) AS paid_orders, "
-                        + "COALESCE(ROUND(SUM(CASE WHEN order_status IN (" + paidStatuses + ") THEN 1 ELSE 0 END) * 1.0 "
-                        + "  / COUNT(1), 4), 0) AS payment_rate, "
-                        + "COALESCE(SUM(CASE WHEN order_status='" + refundEvent + "' THEN 1 ELSE 0 END), 0) AS refund_orders, "
-                        + "COALESCE(ROUND(SUM(CASE WHEN order_status='" + refundEvent + "' THEN 1 ELSE 0 END) * 1.0 "
-                        + "  / COUNT(1), 4), 0) AS refund_rate "
-                        + "FROM dwd_for_kpi")
-                .withColumn("dt", lit(dt).cast(DataTypes.DateType));
+    public void process(Dataset<Row> dwsDf) {
+        Dataset<Row> userDimKpi = dwsDf
+                .filter(col("dim_type").equalTo(OrderStatsConfig.DIM_TYPE_USER))
+                .agg(
+                        sum("order_count").as("total_orders"),
+                        sum("total_amount").as("total_gmv"),
+                        sum("paid_count").as("paid_orders"),
+                        sum("refund_count").as("refund_orders")
+                )
+                .withColumn("avg_order_amount",
+                        round(col("total_gmv").divide(col("total_orders")), 2))
+                .withColumn("payment_rate",
+                        round(col("paid_orders").cast("double").divide(col("total_orders")), 4))
+                .withColumn("refund_rate",
+                        round(col("refund_orders").cast("double").divide(col("total_orders")), 4))
+                .withColumn("dt", lit(dt).cast(DataTypes.DateType))
+                .select("dt", "total_orders", "total_gmv", "avg_order_amount",
+                        "paid_orders", "payment_rate", "refund_orders", "refund_rate");
 
         DataSources.doris()
                 .option(o -> o.setWriteMode(SaveMode.Append))
-                .write(kpiDf, OrderStatsConfig.ADS_ORDER_KPI_DAILY);
-
-        spark.catalog().dropTempView("dwd_for_kpi");
+                .write(userDimKpi, OrderStatsConfig.ADS_ORDER_KPI_DAILY);
     }
 }

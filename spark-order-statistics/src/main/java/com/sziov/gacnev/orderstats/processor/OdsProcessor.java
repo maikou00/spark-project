@@ -8,7 +8,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
 /**
- * ODS 层处理器：读取 Hive ODS 贴源表。
+ * ODS 层处理器：读取 JSON 贴源数据。
  *
  * @author maikou
  * @since 2026-06-09
@@ -25,29 +25,7 @@ public final class OdsProcessor {
     }
 
     public Dataset<Row> readOrderEvents() {
-        return readOdsTable("ods_order_event");
-    }
-
-    public Dataset<Row> readUsers() {
-        return readOdsTable("ods_user");
-    }
-
-    public Dataset<Row> readProducts() {
-        return readOdsTable("ods_product");
-    }
-
-    public Dataset<Row> readStores() {
-        return readOdsTable("ods_store");
-    }
-
-    public Dataset<Row> readRegions() {
-        return readOdsTable("ods_region");
-    }
-
-    private Dataset<Row> readOdsTable(String tableName) {
-        return DataSources.hive()
-                .option(o -> o.setDatabase(OrderStatsConfig.DB_ODS)
-                        .setPartitionFilter(OrderStatsConfig.PART_DT + "='" + dt + "'"))
-                .read(spark, tableName);
+        String path = OrderStatsConfig.ODS_ORDER_EVENT + "/" + OrderStatsConfig.PART_DT + "=" + dt;
+        return DataSources.json().read(spark, path);
     }
 }
