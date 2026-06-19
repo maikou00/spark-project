@@ -11,8 +11,8 @@ import org.apache.spark.sql.SparkSession;
 import static org.apache.spark.sql.functions.lit;
 
 /**
- * DWS 层处理器：基于 DWD 订单事实表进行多粒度日度汇总聚合。
- * <p>一致性语义：分区级 Append + 前置 DROP PARTITION 为 <b>至少一次</b>（幂等）。</p>
+ * DWS 层处理器：基于 DWD 进行多粒度日度汇总聚合。
+ * <p>一致性语义：Overwrite 分区目录为 <b>最终一致</b>。</p>
  *
  * @author maikou
  * @since 2026-06-09
@@ -67,12 +67,10 @@ public final class DwsProcessor {
 
         Dataset<Row> aggregatedDf = spark.sql(aggregateSql);
 
-        spark.sql("ALTER TABLE " + OrderStatsConfig.DWS_ORDER_DAILY
-                + " DROP IF EXISTS PARTITION (dt='" + dt + "')");
-        DataSources.hive()
-                .option(o -> o.setDatabase(OrderStatsConfig.DB_DWS)
-                        .setWriteMode(SaveMode.Append))
-                .write(aggregatedDf.withColumn("dt", lit(dt)), "dws_order_daily");
+        String dwsPath = OrderStatsConfig.DWS_ORDER_DAILY + "/" + OrderStatsConfig.PART_DT + "=" + dt;
+        DataSources.json()
+                .option(o -> o.setWriteMode(SaveMode.Overwrite))
+                .write(aggregatedDf.withColumn("dt", lit(dt)), dwsPath);
 
         spark.catalog().dropTempView("dwd_order_tmp");
 
