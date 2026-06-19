@@ -1,4 +1,4 @@
-package com.sziov.gacnev.orderstats.common;
+package com.sziov.gacnev.utils.pipeline;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;

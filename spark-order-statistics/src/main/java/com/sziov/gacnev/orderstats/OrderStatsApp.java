@@ -3,8 +3,8 @@ package com.sziov.gacnev.orderstats;
 import java.util.Properties;
 
 import com.sziov.gacnev.orderstats.processor.AdsProcessor;
-import com.sziov.gacnev.orderstats.common.InitUtils;
-import com.sziov.gacnev.orderstats.common.PipelineUtils;
+import com.sziov.gacnev.utils.pipeline.InitUtils;
+import com.sziov.gacnev.utils.pipeline.PipelineUtils;
 import com.sziov.gacnev.orderstats.constant.OrderStatsConfig;
 import com.sziov.gacnev.orderstats.processor.DimProcessor;
 import com.sziov.gacnev.orderstats.processor.DwdProcessor;
